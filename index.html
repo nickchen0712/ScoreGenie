@@ -11,41 +11,23 @@
     <link rel="apple-touch-icon" href="icon.png">
 
     <style>
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: #121212;
-        }
-        iframe {
-            width: 100%; height: 100%; border: none;
-            opacity: 0; 
-            transition: opacity 0.5s ease-in-out; 
-        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #121212; }
+        /* 💡 修正：先把 iframe 藏起來，等參數接好後再顯示 */
+        iframe { width: 100%; height: 100%; border: none; opacity: 0; transition: opacity 0.5s ease-in-out; }
 
         #loader {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: #121212;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            z-index: 9999;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #121212; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 9999;
             transition: opacity 0.5s ease-out;
         }
         .spinner {
-            width: 50px; height: 50px;
-            border: 5px solid #333;
-            border-top: 5px solid #ce93d8; 
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            width: 50px; height: 50px; border: 5px solid #333;
+            border-top: 5px solid #ce93d8; border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
         }
-        .loader-text {
-            color: #fff; font-family: sans-serif;
-            font-size: 20px; font-weight: bold; letter-spacing: 2px;
-        }
-        .loader-subtext {
-            color: #888; font-family: sans-serif;
-            font-size: 12px; margin-top: 8px;
-        }
+        .loader-text { color: #fff; font-family: sans-serif; font-size: 20px; font-weight: bold; letter-spacing: 2px; }
+        .loader-subtext { color: #888; font-family: sans-serif; font-size: 12px; margin-top: 8px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -60,24 +42,21 @@
     <iframe id="appFrame" onload="hideLoader()"></iframe>
 
     <script>
-        // 1. 您的原生 GAS 網址
-        var gasUrl = "https://script.google.com/macros/s/AKfycby5naNQkOa4DbrvFrgLpEQoeF2MYEezsv3P6QL0tDUF--VP5LlNW25PlO2u-45CYE0W/exec";
+        // 您的原生 GAS 網址
+        var gasUrl = "https://script.google.com/macros/s/AKfycbymh6lss_alVcp6-hyrQVFq9l6QJY89hq5oMks5DT7HRwmY9WY0nEwCbt7R5-jixhgE/exec";
         
-        // 2. 抓取目前網址列的參數 (例如: ?report=3666_20260307_1512)
+        // 抓取您網域 scoregenie.app 後面的 ?report=...
         var urlParams = window.location.search;
         
-        // 3. 把參數黏在 GAS 網址後面，並塞給 iframe
+        // 把參數接在 GAS 網址後面，並塞給 iframe
         document.getElementById('appFrame').src = gasUrl + urlParams;
 
-        // 4. 原本的載入動畫隱藏邏輯
         function hideLoader() {
             var loader = document.getElementById('loader');
             var iframe = document.getElementById('appFrame');
             loader.style.opacity = '0';
             iframe.style.opacity = '1';
-            setTimeout(function() {
-                loader.style.display = 'none';
-            }, 500);
+            setTimeout(function() { loader.style.display = 'none'; }, 500);
         }
     </script>
 </body>
