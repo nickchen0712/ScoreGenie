@@ -67,6 +67,7 @@
             <div class="room-text">房號：<span id="displayRoomPin">----</span></div>
             <p style="color:#aaa; font-size: 14px; margin-bottom: 20px;">球場訊號不穩？別擔心，點擊下方金黃色按鈕，我們將為您開啟 100% 穩定的直通連線體驗。</p>
             <button onclick="goToDirectApp()" class="direct-link-btn">尊爵啟動：前往記分板 (Direct連線)</button>
+            <button onclick="window.location.href='https://scoregenie.app/'" class="btn-gray" style="margin-top: 10px; background: #333; box-shadow: none;">🔙 取消，返回首頁</button>
             <div class="pro-tip">
                 <span style="color:#ffd700; font-weight:bold;">💡 Pro-Tip (球友福音)：</span><br>
                 在前往記分板後，點擊瀏覽器的「分享」按鈕，選擇「加入主畫面」。未來您就能直接從桌面一鍵啟動這局遊戲，體驗最完美的流暢感！
@@ -124,10 +125,12 @@
             }
         }
 
-        // 打球專用：直通車導向 (跳脫 iframe，確保訊號穩定)
+        // 打球專用：直通車導向
         function goToDirectApp() {
             if (!targetRoom) return;
-            window.location.href = gasUrl + '?room=' + targetRoom;
+            // 💡 修正：使用 replace 取代 href。這會把這頁從瀏覽器歷史中「抹除」，
+            // 確保使用者在記分板按返回鍵時，是直接回到 scoregenie.app 首頁！
+            window.location.replace(gasUrl + '?room=' + targetRoom);
         }
 
         // 大廳功能：建立球局
