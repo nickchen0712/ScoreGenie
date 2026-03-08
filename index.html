@@ -96,21 +96,20 @@
 
         // 大廳功能：建立球局
         function createRoom() {
-            // 這個動作依然需要 GAS 的 GoogleScriptRun，我們在大廳做。
-            // 這裡依然需要開啟一個隱形的外框專門處理這個呼叫。
-            // 因為建立球局通常发生在有訊號的會館或第一洞球道，所以可以用 iframe 做。
+            let btn = document.querySelector('.btn-purple');
+            btn.textContent = '準備中...';
+            btn.disabled = true;
+
             let iframe = document.createElement('iframe');
             iframe.style.display = 'none';
-            // 建立房間不需要參數，只需呼叫一個專門的 function。
             iframe.src = gasUrl + '?action=create'; 
             document.body.appendChild(iframe);
             
-            // 監聽 iframe 回傳的結果
+            // 監聽 GAS 回傳的成功訊號
             window.addEventListener('message', function(event) {
-                // 必須是從 GAS 發過來的訊息
-                if (event.origin !== "https://script.google.com") return;
+                // 💡 修正：放寬跨網域檢查，因為 GAS 會動態轉址到 googleusercontent.com
                 if (event.data && event.data.type === 'roomCreated') {
-                    // 成功建立後，導向帶有參數的大廳啟動頁面
+                    // 成功拿到房號，跳轉到啟動畫面！
                     window.location.href = '?room=' + event.data.pin;
                 }
             }, false);
