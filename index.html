@@ -1,62 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>ScoreGenie</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ScoreGenie | 高爾夫最強記分與對戰精靈</title>
     <meta name="apple-mobile-web-app-title" content="ScoreGenie">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="icon.png">
-
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #121212; }
-        /* 💡 修正：先把 iframe 藏起來，等參數接好後再顯示 */
-        iframe { width: 100%; height: 100%; border: none; opacity: 0; transition: opacity 0.5s ease-in-out; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #0a0a0a; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; }
+        
+        #lobby, #appActivated { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 20px; box-sizing: border-box; }
+        
+        /* 1. 大廳首頁 UI (沒有參數時) */
+        h1 { font-size: 32px; color: #ce93d8; margin: 0 0 5px 0; }
+        p { color: #aaa; margin: 0 0 25px 0; font-size: 16px; }
+        .card { background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); max-width: 400px; width: 100%; border: 1px solid #333; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px; transition: all 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        button:active { transform: translateY(2px); box-shadow: 0 2px 3px rgba(0,0,0,0.2); }
+        .btn-purple { background: linear-gradient(135deg, #ab47bc, #6a1b9a); }
+        .btn-green { background: linear-gradient(135deg, #43a047, #1b5e20); }
+        
+        /* 2. 專業版啟動 (有參數時) */
+        .activated-card { border-color: #ffd700; box-shadow: 0 4px 25px rgba(255, 215, 0, 0.3); }
+        .gold-title { font-size: 36px; margin: 0; background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728); -webkit-background-clip: text; color: transparent; text-shadow: 0px 4px 10px rgba(212, 175, 55, 0.3); letter-spacing: 2px; }
+        .activated-text { color: #fff; font-size: 20px; margin: 20px 0; font-weight: bold; }
+        .room-text { color: #ffd700; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        .direct-link-btn { background: linear-gradient(135deg, #ffd700, #ffb300); color: #3e2723; font-size: 18px; margin-top: 15px; padding: 18px; border-radius: 10px; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4); }
+        .pro-tip { color: #aaa; font-size: 14px; margin-top: 25px; border-top: 1px dashed #444; padding-top: 15px; width: 100%; text-align: left;}
 
-        #loader {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #121212; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 9999;
-            transition: opacity 0.5s ease-out;
-        }
-        .spinner {
-            width: 50px; height: 50px; border: 5px solid #333;
-            border-top: 5px solid #ce93d8; border-radius: 50%;
-            animation: spin 1s linear infinite; margin-bottom: 20px;
-        }
-        .loader-text { color: #fff; font-family: sans-serif; font-size: 20px; font-weight: bold; letter-spacing: 2px; }
-        .loader-subtext { color: #888; font-family: sans-serif; font-size: 12px; margin-top: 8px; }
+        /* Loader */
+        #loader { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #0a0a0a; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; transition: opacity 0.5s ease-out; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #333; border-top: 5px solid #ce93d8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="spinner"></div>
-        <div class="loader-text">🧞‍♂️ ScoreGenie</div>
-        <div class="loader-subtext">魔法啟動中，請稍候...</div>
+    <div id="loader"><div class="spinner"></div><div class="loader-text">ScoreGenie 大廳載入中...</div></div>
+
+    <div id="lobby" style="display:none;">
+        <div class="card">
+            <h1>🧞‍♂️ ScoreGenie Lobby</h1>
+            <p>專業高爾夫記分大廳</p>
+            <button onclick="createRoom()" class="btn-purple">✨ 建立新球局</button>
+            <div style="margin: 20px 0; border-top: 1px solid #444; position: relative;"><span style="background: #1e1e1e; padding: 0 10px; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #888; font-size: 14px;">或</span></div>
+            <input type="number" id="roomPin" placeholder="輸入 4 位數 PIN 碼" inputmode="numeric" style="text-align: center; letter-spacing: 5px; font-size: 20px; font-weight: bold; width: 100%; padding: 12px; margin-bottom: 15px; background: #2c2c2c; color: #fff; border: 1px solid #444; border-radius: 8px; box-sizing: border-box;">
+            <button onclick="joinRoom()" class="btn-green">🤝 加入球局</button>
+        </div>
     </div>
 
-    <iframe id="appFrame" onload="hideLoader()"></iframe>
+    <div id="appActivated" style="display:none;">
+        <div class="card activated-card">
+            <h1 class="gold-title">SCOREGENIE</h1>
+            <p class="activated-text">✅ 專業球局已啟動！</p>
+            <div class="room-text">房號：<span id="displayRoomPin">----</span></div>
+            <p style="color:#aaa; font-size: 14px; margin-bottom: 20px;">球場訊號不穩？別擔心，點擊下方金黃色按鈕，我們將為您開啟 100% 穩定的直通連線體驗。</p>
+            <button onclick="goToDirectApp()" class="direct-link-btn">尊爵啟動：前往記分板 (Direct連線)</button>
+            <div class="pro-tip">
+                <span style="color:#ffd700; font-weight:bold;">💡 Pro-Tip (球友福音)：</span><br>
+                在前往記分板後，點擊瀏覽器的「分享」按鈕，選擇「加入主畫面」。未來您就能直接從桌面一鍵啟動這局遊戲，體驗最完美的流暢感！
+            </div>
+        </div>
+    </div>
 
     <script>
-        // 您的原生 GAS 網址
-        var gasUrl = "https://script.google.com/macros/s/AKfycbymh6lss_alVcp6-hyrQVFq9l6QJY89hq5oMks5DT7HRwmY9WY0nEwCbt7R5-jixhgE/exec";
+        // 🚨 重要：這裡請換成您自己的 GAS 網址！
+        const gasUrl = "https://script.google.com/macros/s/AKfycbymh6lss_alVcp6-hyrQVFq9l6QJY89hq5oMks5DT7HRwmY9WY0nEwCbt7R5-jixhgE/exec"; 
         
-        // 抓取您網域 scoregenie.app 後面的 ?report=...
-        var urlParams = window.location.search;
-        
-        // 把參數接在 GAS 網址後面，並塞給 iframe
-        document.getElementById('appFrame').src = gasUrl + urlParams;
+        let targetRoom = null;
 
-        function hideLoader() {
-            var loader = document.getElementById('loader');
-            var iframe = document.getElementById('appFrame');
-            loader.style.opacity = '0';
-            iframe.style.opacity = '1';
-            setTimeout(function() { loader.style.display = 'none'; }, 500);
+        window.onload = function() {
+            var urlParams = new URLSearchParams(window.location.search);
+            targetRoom = urlParams.get('room');
+            
+            // 隱藏 Loader
+            document.getElementById('loader').style.opacity = '0';
+            setTimeout(function() { document.getElementById('loader').style.display = 'none'; }, 500);
+
+            if (targetRoom) {
+                // 有參數：顯示專業版啟動畫面
+                document.getElementById('appActivated').style.display = 'flex';
+                document.getElementById('displayRoomPin').textContent = targetRoom;
+            } else {
+                // 沒參數：顯示大廳首頁
+                document.getElementById('lobby').style.display = 'flex';
+            }
+        };
+
+        function goToDirectApp() {
+            if (!targetRoom) return;
+            // 💡 關鍵解法：直接連線到 GAS 網址，跳脫 IframeTrap，體驗 100% 效能與穩定！
+            window.location.href = gasUrl + '?room=' + targetRoom;
+        }
+
+        // 大廳功能：建立球局
+        function createRoom() {
+            // 這個動作依然需要 GAS 的 GoogleScriptRun，我們在大廳做。
+            // 這裡依然需要開啟一個隱形的外框專門處理這個呼叫。
+            // 因為建立球局通常发生在有訊號的會館或第一洞球道，所以可以用 iframe 做。
+            let iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            // 建立房間不需要參數，只需呼叫一個專門的 function。
+            iframe.src = gasUrl + '?action=create'; 
+            document.body.appendChild(iframe);
+            
+            // 監聽 iframe 回傳的結果
+            window.addEventListener('message', function(event) {
+                // 必須是從 GAS 發過來的訊息
+                if (event.origin !== "https://script.google.com") return;
+                if (event.data && event.data.type === 'roomCreated') {
+                    // 成功建立後，導向帶有參數的大廳啟動頁面
+                    window.location.href = '?room=' + event.data.pin;
+                }
+            }, false);
+        }
+
+        function joinRoom() {
+            var pin = document.getElementById('roomPin').value;
+            if (!pin || pin.length !== 4) { alert("請輸入 4 位數 PIN 碼"); return; }
+            // 加入房間，直接導向帶有參數的大廳啟動頁面。
+            window.location.href = '?room=' + pin;
         }
     </script>
 </body>
