@@ -8,6 +8,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ScoreGenie">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         body, html { margin: 0; padding: 0; min-height: 100%; width: 100%; background-color: #0a0a0a; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; }
@@ -98,6 +100,16 @@
             <button onclick="document.getElementById('dynGameModal').style.display='none'" class="btn-gray">關閉視窗</button>
         </div>
     </div>
+
+    <div id="imageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; overflow-y:auto;">
+        <div style="margin: 20px auto; width: 90%; max-width: 400px; text-align: center;">
+            <h3 style="color:#fff;">長按圖片即可儲存</h3>
+            <img id="generatedImage" style="width:100%; border-radius:8px; border:2px solid white; margin-bottom: 20px;">
+            <button onclick="closeImageModal()" class="btn-red">關閉視窗並離開</button>
+        </div>
+    </div>
+    
+    <div id="captureContainer" style="position:absolute; top:-9999px; left:-9999px; width: 800px; background:white; padding:20px; text-align:center;"></div>
 
     <div id="page-lobby" class="page-container active-page">
         <div class="card">
@@ -201,6 +213,7 @@
 
             <hr style="margin: 25px 0;">
             <button id="btnGenLink" onclick="generateShareLink()" class="btn-gold">🔗 產生 Premium 專屬戰報</button>
+            <button onclick="generateImage()" class="btn-blue" style="margin-top: 10px;">📸 舊版匯出截圖</button>
         </div>
     </div>
 
@@ -478,7 +491,6 @@
             
             if (res && res.permId) { 
                 let url = window.location.origin + window.location.pathname + "?report=" + res.permId; 
-                // Safari 剪貼簿防呆機制 (Catch async clipboard block)
                 try {
                     await navigator.clipboard.writeText(url);
                     alert("🎉 專屬戰報已產生！\n網址已複製，請直接到 LINE 貼上即可：\n\n" + url);
@@ -537,6 +549,58 @@
             }
             document.getElementById("repDetailedDataArea").innerHTML = detailedHtml;
         }
+
+        // 💡 補回：舊版繪出截圖功能 (html2canvas)
+        async function generateImage() {
+            var btn = document.querySelector("button[onclick='generateImage()']");
+            var originalText = btn.textContent; btn.textContent = "繪圖中..."; btn.disabled = true;
+            
+            const data = await apiCall("getAllDataForImage", { pin: currentPin });
+            if (!data) { btn.textContent = originalText; btn.disabled = false; return; }
+            
+            var container = document.getElementById("captureContainer");
+            container.innerHTML = ""; container.style.width = "800px"; container.style.fontFamily = "sans-serif";
+            
+            var courseInfo = data.score[1][0]; var dateStr = new Date().toLocaleDateString();
+            var headerDiv = document.createElement("div");
+            headerDiv.innerHTML = `<h2 style="margin:0; color:#333;">⛳ ScoreGenie 記分卡</h2><p style="margin:5px 0 20px 0; color:#666;">日期：${dateStr} | 球局：${currentPin}</p>`;
+            var courseDiv = document.createElement("h3"); courseDiv.textContent = "🏟️ " + courseInfo; courseDiv.style.color = "#0288d1";
+            headerDiv.appendChild(courseDiv); container.appendChild(headerDiv);
+            
+            var scoreTitle = document.createElement("h3"); scoreTitle.textContent = "【詳細桿數與個人讓桿積分】"; scoreTitle.style.textAlign = "left"; scoreTitle.style.borderBottom = "2px solid #2196f3"; scoreTitle.style.color = "#0d47a1"; container.appendChild(scoreTitle);
+            var table = document.createElement("table"); table.style.width = "100%"; table.style.borderCollapse = "collapse"; table.style.fontSize = "14px"; table.style.tableLayout = "fixed";
+            var transposed = data.score[0].map(function(c, i) { return data.score.map(function(r) { return r[i]; }); });
+            transposed.forEach(function(row, rowIndex) {
+                if (rowIndex === 11) { var extraTr = document.createElement("tr"); transposed[0].forEach(function(headerCell, cellIndex) { var th = document.createElement("th"); th.textContent = headerCell; th.style.border = "1px solid #ddd"; th.style.padding = "8px"; th.style.textAlign = "center"; th.style.backgroundColor = "#2196f3"; th.style.color = "white"; if (cellIndex >= 22) th.style.backgroundColor = "#8e24aa"; if (cellIndex === 0) th.style.width = "10%"; if (cellIndex === 2) { th.style.backgroundColor = "#e0e0e0"; th.style.color = "#333"; } extraTr.appendChild(th); }); table.appendChild(extraTr); }
+                var tr = document.createElement("tr"); if (rowIndex >= 22) tr.style.backgroundColor = "#f3e5f5"; else if (rowIndex % 2 === 1) tr.style.backgroundColor = "#f9f9f9";
+                var isHoleColumn = (rowIndex >= 1 && rowIndex <= 9) || (rowIndex >= 11 && rowIndex <= 19); var parValue = parseInt(row[1]);
+                row.forEach(function(cell, cellIndex) {
+                    var cellEl = (rowIndex === 0) ? document.createElement("th") : document.createElement("td");
+                    cellEl.style.border = "1px solid #ddd"; cellEl.style.padding = "8px"; cellEl.style.textAlign = "center"; if (cellIndex === 0) cellEl.style.width = "10%";
+                    if (rowIndex === 0) { cellEl.textContent = cell; cellEl.style.backgroundColor = "#2196f3"; cellEl.style.color = "white"; if (cellIndex >= 22) cellEl.style.backgroundColor = "#8e24aa"; if (cellIndex === 2) { cellEl.style.backgroundColor = "#e0e0e0"; cellEl.style.color = "#333"; } } 
+                    else { if (cellIndex === 1) { cellEl.textContent = cell; cellEl.style.color = "#1976d2"; cellEl.style.fontWeight = "bold"; } else if (cellIndex === 2) { cellEl.textContent = cell; cellEl.style.backgroundColor = "#f5f5f5"; cellEl.style.color = "#666"; cellEl.style.fontStyle = "italic"; } else if (rowIndex >= 22) { cellEl.textContent = cell; cellEl.style.color = "#d32f2f"; cellEl.style.fontWeight = "bold"; } else if (isHoleColumn && cellIndex > 2 && cell !== "") { var score = parseInt(cell); if (!isNaN(score) && !isNaN(parValue)) { var diff = score - parValue; var span = document.createElement("span"); span.textContent = cell; span.style.display = "inline-flex"; span.style.justifyContent = "center"; span.style.alignItems = "center"; span.style.width = "28px"; span.style.height = "28px"; span.style.fontWeight = "bold"; span.style.boxSizing = "border-box"; span.style.margin = "0 auto"; if (diff <= -2) { span.style.border = "3.5px double #d32f2f"; span.style.borderRadius = "50%"; span.style.color = "#d32f2f"; } else if (diff === -1) { span.style.border = "1.5px solid #d32f2f"; span.style.borderRadius = "50%"; span.style.color = "#d32f2f"; } else if (diff === 0) { span.style.color = "#1976d2"; } else if (diff === 1) { span.style.border = "1.5px solid #333"; span.style.color = "#333"; } else { span.style.border = "3.5px double #333"; span.style.color = "#333"; } cellEl.appendChild(span); } else cellEl.textContent = cell; } else cellEl.textContent = cell; }
+                    tr.appendChild(cellEl);
+                });
+                table.appendChild(tr);
+            });
+            container.appendChild(table);
+            
+            var matchTitle = document.createElement("h3"); matchTitle.textContent = "【對戰勝負與下回讓桿】"; matchTitle.style.textAlign = "left"; matchTitle.style.marginTop = "30px"; matchTitle.style.borderBottom = "2px solid #ff9800"; matchTitle.style.color = "#e65100"; container.appendChild(matchTitle);
+            if (data.match.length > 0) { var mTable = document.createElement("table"); mTable.style.width = "100%"; mTable.style.borderCollapse = "collapse"; mTable.style.tableLayout = "fixed"; var thead = '<tr style="background-color:#ef6c00; color:white;"><th style="padding:10px; border:1px solid #ddd; width:25%;">對戰組合</th><th style="padding:10px; border:1px solid #ddd; width:15%;">讓桿</th><th style="padding:10px; border:1px solid #ddd; width:15%;">前九</th><th style="padding:10px; border:1px solid #ddd; width:15%;">後九</th><th style="padding:10px; border:1px solid #ddd; width:15%;">總和</th><th style="padding:10px; border:1px solid #ddd; width:15%; background-color:#0288d1;">下回讓桿</th></tr>'; mTable.innerHTML = thead; data.match.forEach(function(row) { var tr = document.createElement("tr"); tr.innerHTML = `<td style="padding:10px; border:1px solid #ddd; text-align:left; font-weight:bold;">${row.name}</td><td style="padding:10px; border:1px solid #ddd; text-align:center; color:#666;">${row.hdcp}</td><td style="padding:10px; border:1px solid #ddd; text-align:center;">${row.f9}</td><td style="padding:10px; border:1px solid #ddd; text-align:center;">${row.b9}</td><td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold; color:#d84315; background-color:#fff3e0;">${row.all}</td><td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold; color:#0277bd; background-color:#e1f5fe;">${row.nextHdcp}</td>`; mTable.appendChild(tr); }); container.appendChild(mTable); }
+            
+            if (data.dynGame && !data.dynGame.error) { var dynTitle = document.createElement("h3"); dynTitle.textContent = `【團體遊戲最終總分 (${data.dynGame.mode})】`; dynTitle.style.textAlign = "left"; dynTitle.style.marginTop = "30px"; dynTitle.style.borderBottom = "2px solid #8e24aa"; dynTitle.style.color = "#8e24aa"; container.appendChild(dynTitle); var dTable = document.createElement("table"); dTable.style.width = "100%"; dTable.style.borderCollapse = "collapse"; dTable.style.tableLayout = "fixed"; var dHead = '<tr style="background-color:#8e24aa; color:white;">'; data.dynGame.players.forEach(function(p) { dHead += `<th style="padding:10px; border:1px solid #ddd;">${p}</th>`; }); dHead += '</tr>'; dTable.innerHTML = dHead; var dTr = document.createElement("tr"); data.dynGame.players.forEach(function(p) { var tot = data.dynGame.finalTotals[p]; var color = tot > 0 ? "#d32f2f" : (tot < 0 ? "#2e7d32" : "#333"); var sign = tot > 0 ? "+" : ""; dTr.innerHTML += `<td style="padding:15px 10px; border:1px solid #ddd; text-align:center; font-weight:bold; font-size:18px; color:${color};">${sign}${tot}</td>`; }); dTable.appendChild(dTr); container.appendChild(dTable); }
+            
+            setTimeout(function() {
+                html2canvas(container, { scale: 2, backgroundColor: "#ffffff" }).then(function(canvas) {
+                    document.getElementById("generatedImage").src = canvas.toDataURL("image/png");
+                    document.getElementById("imageModal").style.display = "block";
+                    btn.textContent = originalText; btn.disabled = false;
+                }).catch(function(err) {
+                    alert("截圖失敗：" + err); btn.textContent = originalText; btn.disabled = false;
+                });
+            }, 100);
+        }
+        function closeImageModal() { document.getElementById("imageModal").style.display = "none"; }
     </script>
 </body>
 </html>
