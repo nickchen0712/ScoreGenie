@@ -5,156 +5,486 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ScoreGenie | 高爾夫最強記分與對戰精靈</title>
     
-    <meta name="apple-mobile-web-app-title" content="ScoreGenie">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-title" content="ScoreGenie">
 
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #0a0a0a; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; }
+        body, html { margin: 0; padding: 0; min-height: 100%; width: 100%; background-color: #0a0a0a; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; }
         
-        /* 1. 大廳與直通車介面 */
-        #lobby, #appActivated { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 20px; box-sizing: border-box; }
-        h1 { font-size: 32px; color: #ce93d8; margin: 0 0 5px 0; }
+        .page-container { display: none; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .active-page { display: flex; }
+        
+        h1, h2, h3, h4 { color: #ffffff; }
         p { color: #aaa; margin: 0 0 25px 0; font-size: 16px; }
-        .card { background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); max-width: 400px; width: 100%; border: 1px solid #333; box-sizing: border-box; }
+        
+        .card { background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); max-width: 450px; width: 100%; border: 1px solid #333; box-sizing: border-box; margin: auto; }
+        
+        select, input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; background-color: #2c2c2c; color: #ffffff; border: 1px solid #444; border-radius: 8px; font-size: 16px; box-sizing: border-box; text-align: center; }
+        select:focus, input:focus, textarea:focus { outline: none; border-color: #64b5f6; }
+        
         button { width: 100%; padding: 15px; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px; transition: all 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         button:active { transform: translateY(2px); box-shadow: 0 2px 3px rgba(0,0,0,0.2); }
+        button:disabled { background: #555 !important; color: #888 !important; cursor: not-allowed; }
+        
         .btn-purple { background: linear-gradient(135deg, #ab47bc, #6a1b9a); }
         .btn-green { background: linear-gradient(135deg, #43a047, #1b5e20); }
+        .btn-orange { background: linear-gradient(135deg, #ffa726, #e65100); }
+        .btn-blue { background: linear-gradient(135deg, #29b6f6, #0277bd); }
+        .btn-gray { background: linear-gradient(135deg, #78909c, #37474f); }
+        .btn-gold { background: linear-gradient(135deg, #ffd700, #ffb300); color: #3e2723; } 
+        .btn-red { background: linear-gradient(135deg, #ef5350, #c62828); }
+
+        .pin-display { background: linear-gradient(135deg, #2c2c2c, #1e1e1e); border: 2px dashed #ff9800; color: #ffb74d; font-size: 24px; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; letter-spacing: 2px; }
         
-        .activated-card { border-color: #ffd700; box-shadow: 0 4px 25px rgba(255, 215, 0, 0.3); }
-        .gold-title { font-size: 36px; margin: 0; background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728); -webkit-background-clip: text; color: transparent; text-shadow: 0px 4px 10px rgba(212, 175, 55, 0.3); letter-spacing: 2px; }
-        .activated-text { color: #fff; font-size: 20px; margin: 20px 0; font-weight: bold; }
-        .room-text { color: #ffd700; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-        .direct-link-btn { background: linear-gradient(135deg, #ffd700, #ffb300); color: #3e2723; font-size: 18px; margin-top: 15px; padding: 18px; border-radius: 10px; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4); }
-        .pro-tip { color: #aaa; font-size: 14px; margin-top: 25px; border-top: 1px dashed #444; padding-top: 15px; width: 100%; text-align: left;}
+        /* 表格與記分網格 */
+        .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .score-grid-item { background: #2c2c2c; border: 2px solid #0277bd; padding: 10px; border-radius: 10px; }
+        .score-grid-item label { display: block; font-weight: bold; color: #81d4fa; margin-bottom: 8px; font-size: 15px; }
+        .score-grid-item input { font-size: 22px; color: #ff5252; background-color: #1e1e1e; margin-bottom: 0; }
 
-        /* 2. 戰報專用 Iframe */
-        iframe { width: 100%; height: 100%; border: none; opacity: 0; transition: opacity 0.5s ease-in-out; position: absolute; top: 0; left: 0; z-index: 100; display: none; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 14px; background: #1e1e1e; color: #fff; margin-bottom: 20px;}
+        .data-table th, .data-table td { border: 1px solid #444; padding: 8px; text-align: center; }
+        .data-table th { background: linear-gradient(135deg, #0277bd, #01579b); }
+        .data-table tr:nth-child(even) { background-color: #252525; }
 
-        /* 3. 超有質感的 Loader */
-        #loader { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #0a0a0a; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; transition: opacity 0.5s ease-out; }
-        .spinner { width: 50px; height: 50px; border: 5px solid #333; border-top: 5px solid #ce93d8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        .loader-text { color: #fff; font-family: sans-serif; font-size: 20px; font-weight: bold; letter-spacing: 2px; }
-        .loader-subtext { color: #888; font-family: sans-serif; font-size: 12px; margin-top: 8px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Loader */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(10,10,10,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; transition: opacity 0.3s ease; }
+        .genie-loader { font-size: 65px; margin-bottom: 15px; animation: float 1.5s ease-in-out infinite; filter: drop-shadow(0px 0px 15px rgba(206, 147, 216, 0.6)); }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+
+        /* 戰報黑金樣式 */
+        .gold-title { font-size: 36px; margin: 0 0 20px 0; background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728); -webkit-background-clip: text; color: transparent; text-shadow: 0px 4px 10px rgba(212, 175, 55, 0.3); letter-spacing: 2px; }
+        .premium-card { background: linear-gradient(145deg, #1c1c1c, #121212); border: 1px solid #444; border-radius: 15px; padding: 25px 20px; margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.6); position: relative; overflow: hidden; }
+        .premium-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(to right, #ab47bc, #ff9800); }
+        
+        /* 🏆 總幹事成績表專屬 */
+        .net-input { width: 60px; padding: 5px; font-size: 16px; margin: 0; border: 1px solid #888; background: #333; color: #fff; }
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="spinner"></div>
-        <div class="loader-text" id="loaderTitle">🧞‍♂️ ScoreGenie</div>
-        <div class="loader-subtext" id="loaderSub">魔法啟動中，請稍候...</div>
+    <div id="loader" style="display:none;">
+        <div class="genie-loader">🧞‍♂️</div>
+        <div id="loaderText" style="color:#ce93d8; font-size:20px; font-weight:bold; letter-spacing:2px;">魔法連線中...</div>
     </div>
 
-    <div id="lobby" style="display:none;">
+    <div id="page-lobby" class="page-container active-page">
         <div class="card">
-            <h1>🧞‍♂️ ScoreGenie</h1>
-            <p>高爾夫最強記分與對戰精靈</p>
-            <button onclick="createRoom()" class="btn-purple">✨ 建立新球局</button>
-            <div style="margin: 20px 0; border-top: 1px solid #444; position: relative;"><span style="background: #1e1e1e; padding: 0 10px; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #888; font-size: 14px;">或</span></div>
-            <input type="number" id="roomPin" placeholder="輸入 4 位數 PIN 碼" inputmode="numeric" style="text-align: center; letter-spacing: 5px; font-size: 20px; font-weight: bold; width: 100%; padding: 12px; margin-bottom: 15px; background: #2c2c2c; color: #fff; border: 1px solid #444; border-radius: 8px; box-sizing: border-box;">
+            <h1 style="color: #ce93d8; font-size: 32px; margin-bottom: 5px;">🧞‍♂️ ScoreGenie</h1>
+            <p>專業高爾夫雲端記分</p>
+            
+            <button onclick="createSingleRoom()" class="btn-purple">✨ 建立單局記分</button>
+            <button onclick="navTo('page-tourney-setup')" class="btn-gold">🏆 建立球隊多局賽 (總幹事)</button>
+            
+            <div style="margin: 20px 0; border-top: 1px solid #444; position: relative;">
+                <span style="background: #1e1e1e; padding: 0 10px; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #888; font-size: 14px;">或加入球局</span>
+            </div>
+            
+            <input type="number" id="joinPinInput" placeholder="輸入 4 位數 PIN 碼" inputmode="numeric" style="letter-spacing: 5px; font-size: 20px; font-weight: bold;">
             <button onclick="joinRoom()" class="btn-green">🤝 加入球局</button>
         </div>
     </div>
 
-    <div id="appActivated" style="display:none;">
-        <div class="card activated-card">
-            <h1 class="gold-title">SCOREGENIE</h1>
-            <p class="activated-text">✅ 專業球局已啟動！</p>
-            <div class="room-text">房號：<span id="displayRoomPin">----</span></div>
-            <p style="color:#aaa; font-size: 14px; margin-bottom: 20px;">球場訊號不穩？別擔心，點擊下方金黃色按鈕，我們將為您開啟 100% 穩定的直通連線體驗。</p>
-            <button onclick="goToDirectApp()" class="direct-link-btn">尊爵啟動：前往記分板</button>
-            <button onclick="window.location.href='https://scoregenie.app/'" class="btn-gray" style="margin-top: 10px; background: #333; box-shadow: none;">🔙 取消，返回首頁</button>
+    <div id="page-tourney-setup" class="page-container">
+        <div class="card">
+            <h2 class="gold-title" style="font-size:28px;">🏆 球隊賽事開局</h2>
+            <p>統一設定球場，一次產出所有組別的專屬 PIN 碼。</p>
+            
+            <label style="color:#81d4fa; font-weight:bold;">1. 選擇賽事球場</label>
+            <select id="tourneyCourseSelect"><option>載入中...</option></select>
+            
+            <label style="color:#81d4fa; font-weight:bold;">2. 預計開球組數</label>
+            <select id="tourneyGroupCount">
+                <option value="2">2 組 (最多 8 人)</option>
+                <option value="3">3 組 (最多 12 人)</option>
+                <option value="4">4 組 (最多 16 人)</option>
+                <option value="5">5 組 (最多 20 人)</option>
+                <option value="6">6 組 (最多 24 人)</option>
+                <option value="8">8 組 (最多 32 人)</option>
+                <option value="10">10 組 (最多 40 人)</option>
+            </select>
+            
+            <button onclick="createTournament()" class="btn-gold" style="margin-top:20px;">🚀 一鍵產生賽事</button>
+            <button onclick="navTo('page-lobby')" class="btn-gray">🔙 取消返回</button>
         </div>
     </div>
 
-    <iframe id="appFrame" onload="hideReportLoader()"></iframe>
+    <div id="page-tourney-result" class="page-container">
+        <div class="card" style="max-width:500px;">
+            <h2 style="color:#81c784;">✅ 賽事建立成功！</h2>
+            <p style="margin-bottom:10px;">請將以下各組 PIN 碼發給各組組長：</p>
+            
+            <div id="tourneyPinsArea" style="background:#2c2c2c; padding:15px; border-radius:8px; margin-bottom:20px; text-align:left;"></div>
+            
+            <p style="color:#ffd700; font-size:14px;">您的總幹事結算網址：</p>
+            <input type="text" id="tourneyDashboardUrl" readonly style="font-size:12px; color:#aaa;" onclick="this.select()">
+            
+            <button onclick="copyTourneyInfo()" class="btn-blue">📋 複製賽事資訊分享至 LINE</button>
+            <button onclick="goToTourneyDashboard()" class="btn-gold">📊 進入總結算表 (敘獎用)</button>
+        </div>
+    </div>
+
+    <div id="page-tourney-dashboard" class="page-container" style="justify-content: flex-start;">
+        <h1 class="gold-title" style="margin-top:20px;">🏆 球隊賽事總結算</h1>
+        <h3 id="tdCourseName" style="color:#81d4fa; margin:0 0 20px 0;"></h3>
+        
+        <div class="card" style="max-width: 600px; padding: 15px;">
+            <div style="overflow-x:auto;">
+                <table class="data-table" id="tourneyLeaderboard">
+                    <thead>
+                        <tr>
+                            <th style="width:20%">姓名</th>
+                            <th style="width:20%">總桿</th>
+                            <th style="width:25%; background:#e65100;">球隊差點</th>
+                            <th style="width:20%; background:#2e7d32;">淨桿</th>
+                            <th style="width:15%">明細</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button onclick="sortTourneyLeaderboard()" class="btn-gold" style="margin-top:15px;">🏅 依淨桿重新排名</button>
+            <button onclick="navTo('page-lobby')" class="btn-gray">🔙 返回大廳</button>
+        </div>
+    </div>
+
+    <div id="page-main" class="page-container" style="justify-content: flex-start;">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #fff;">🧞‍♂️ ScoreGenie</h2>
+                <button onclick="exitRoom()" class="btn-red" style="width: auto; padding: 8px 12px; font-size: 14px; margin: 0; box-shadow: none;">離開球局</button>
+            </div>
+            
+            <div class="pin-display">球局 PIN 碼：<span id="displayPin">----</span></div>
+            
+            <button onclick="navTo('page-setup'); loadSetupData();" class="btn-gray" style="margin-bottom: 20px;">⚙️ 設定球場與名單</button>
+            
+            <select id="holeSelect"><option value="" disabled selected>請選擇洞號</option></select>
+            <div id="scoreGrid" class="score-grid"></div>
+            
+            <button onclick="submitScores()" class="btn-green">送出本洞成績</button>
+            
+            <hr style="margin: 25px 0;">
+            <button onclick="generateShareLink()" class="btn-gold">🔗 產生 Premium 專屬戰報</button>
+        </div>
+    </div>
+
+    <div id="page-setup" class="page-container">
+        <div class="card">
+            <h2 style="color:#fff;">⚙️ 設定比賽資訊</h2>
+            
+            <label style="color:#81d4fa; font-weight:bold; margin-top:10px; display:block;">⛳ 球場與開球設定</label>
+            <select id="setupCourseSelect"><option>載入中...</option></select>
+            <select id="setupTeeOff"><option value="OUT">Out Start (前九開球)</option><option value="IN">IN Start (後九開球)</option></select>
+            <button onclick="applyCourse()" class="btn-orange" style="margin-bottom:20px; font-size:16px; padding:10px;">套用球場設定</button>
+
+            <h4 style="margin: 10px 0; color: #81d4fa;">1. 球員名單</h4>
+            <div id="setupPlayers" style="margin-bottom: 20px;"></div>
+            
+            <button onclick="saveSetup()" class="btn-green">💾 儲存並返回</button>
+            <button onclick="navTo('page-main')" class="btn-gray">🔙 放棄修改</button>
+        </div>
+    </div>
+
+    <div id="page-report" class="page-container" style="justify-content: flex-start; padding-top:40px;">
+        <div style="max-width: 600px; width: 100%;">
+            <h1 class="gold-title">SCOREGENIE</h1>
+            <h3 style="color:#ce93d8; letter-spacing:3px;">PREMIUM 戰報</h3>
+            <p id="repCourseDate" style="border-top:1px solid #333; border-bottom:1px solid #333; padding:10px 0;"></p>
+            
+            <div class="premium-card">
+                <p style="color:#ffd700; font-weight:bold;">💰 今日賞金王</p>
+                <h1 id="repKingName" style="font-size:42px; margin:0;">---</h1>
+            </div>
+            
+            <div id="repStatsList" class="premium-card"></div>
+            
+            <button onclick="window.location.href='?'" class="btn-gray" style="margin-top:30px;">➕ 我也要開局</button>
+        </div>
+    </div>
 
     <script>
-        // 您的原生 GAS 網址
+        // 🚨 重要：貼上您剛部署的 GAS URL
         const gasUrl = "https://script.google.com/macros/s/AKfycbymh6lss_alVcp6-hyrQVFq9l6QJY89hq5oMks5DT7HRwmY9WY0nEwCbt7R5-jixhgE/exec"; 
         
-        let targetRoom = null;
-        let targetReport = null;
+        let currentPin = "";
+        let currentTourneyId = "";
 
-        // 🌟 智慧路由器核心
-        window.onload = function() {
-            var urlParams = new URLSearchParams(window.location.search);
-            targetRoom = urlParams.get('room');
-            targetReport = urlParams.get('report');
-            
-            if (targetReport) {
-                // 【情境 1】網址有 report：啟動 Iframe 包裝戰報模式
-                document.getElementById('loaderTitle').textContent = '🏆 ScoreGenie';
-                document.getElementById('loaderSub').textContent = 'Premium 戰報載入中...';
+        // =========================================
+        // 🚀 通訊層：萬用 Fetch Wrapper
+        // =========================================
+        async function apiCall(action, payload = {}) {
+            showLoader();
+            try {
+                // 使用 POST 傳遞 JSON，且 Header 保持 text/plain 繞過 CORS preflight
+                const response = await fetch(gasUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: action, payload: payload })
+                });
                 
-                var iframe = document.getElementById('appFrame');
-                iframe.style.display = 'block'; // 顯示 iframe
-                iframe.src = gasUrl + '?report=' + targetReport; // 灌入網址
-            } else {
-                // 非戰報模式：一秒後隱藏 Loader
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(function() { document.getElementById('loader').style.display = 'none'; }, 500);
-
-                if (targetRoom) {
-                    // 【情境 2】網址有 room：顯示直通車啟動畫面
-                    document.getElementById('appActivated').style.display = 'flex';
-                    document.getElementById('displayRoomPin').textContent = targetRoom;
-                } else {
-                    // 【情境 3】什麼參數都沒有：顯示首頁大廳
-                    document.getElementById('lobby').style.display = 'flex';
+                const json = await response.json();
+                hideLoader();
+                
+                if (!json.success) {
+                    alert("伺服器錯誤：" + json.error);
+                    return null;
                 }
+                return json.data;
+            } catch (err) {
+                hideLoader();
+                alert("連線失敗，請檢查網路狀態！");
+                return null;
+            }
+        }
+
+        // =========================================
+        // 畫面切換與工具
+        // =========================================
+        function navTo(pageId) {
+            document.querySelectorAll('.page-container').forEach(p => p.classList.remove('active-page'));
+            document.getElementById(pageId).classList.add('active-page');
+        }
+        function showLoader() { document.getElementById('loader').style.display = 'flex'; }
+        function hideLoader() { document.getElementById('loader').style.display = 'none'; }
+
+        // =========================================
+        // 啟動路由 (Router)
+        // =========================================
+        window.onload = async function() {
+            var urlParams = new URLSearchParams(window.location.search);
+            var room = urlParams.get('room');
+            var report = urlParams.get('report');
+            var tourney = urlParams.get('tourney');
+            
+            // 預載球場清單
+            const courseData = await apiCall("getCourseList");
+            if (courseData) {
+                let opts = '<option value="" disabled selected>請選擇球場</option>';
+                courseData.courses.forEach(c => opts += `<option value="${c}">${c}</option>`);
+                document.getElementById('tourneyCourseSelect').innerHTML = opts;
+                document.getElementById('setupCourseSelect').innerHTML = opts;
+            }
+
+            // 初始化洞號
+            let holes = '<option value="" disabled selected>選擇洞號</option>';
+            for(let i=1; i<=18; i++) holes += `<option value="${i}">第 ${i} 洞</option>`;
+            document.getElementById('holeSelect').innerHTML = holes;
+
+            if (report) { loadReport(report); }
+            else if (tourney) { loadTourneyDashboard(tourney); }
+            else if (room) { joinRoom(room); }
+            else {
+                let saved = localStorage.getItem("sg_pin");
+                if(saved) joinRoom(saved);
+                else navTo('page-lobby');
             }
         };
 
-        // 戰報專用：Iframe 載入完畢後，把 Loader 隱藏
-        function hideReportLoader() {
-            if (targetReport) {
-                var loader = document.getElementById('loader');
-                var iframe = document.getElementById('appFrame');
-                loader.style.opacity = '0';
-                iframe.style.opacity = '1';
-                setTimeout(function() { loader.style.display = 'none'; }, 500);
+        // =========================================
+        // 單局核心功能
+        // =========================================
+        async function createSingleRoom() {
+            const res = await apiCall("createRoom");
+            if (res) enterMainPage(res.pin);
+        }
+
+        async function joinRoom(manualPin) {
+            let pin = manualPin || document.getElementById('joinPinInput').value;
+            if(!pin) return;
+            const res = await apiCall("verifyRoom", { pin: pin });
+            if (res && res.exists) enterMainPage(pin);
+            else alert("找不到此球局！");
+        }
+
+        function enterMainPage(pin) {
+            currentPin = pin;
+            localStorage.setItem("sg_pin", pin);
+            document.getElementById('displayPin').textContent = pin;
+            navTo('page-main');
+            refreshMainBoard();
+        }
+
+        function exitRoom() {
+            localStorage.removeItem("sg_pin");
+            currentPin = "";
+            window.location.href = '?';
+        }
+
+        async function refreshMainBoard() {
+            const res = await apiCall("getPlayers", { pin: currentPin });
+            if (!res) return;
+            let html = "";
+            res.players.forEach((p, i) => {
+                if(p) html += `<div class="score-grid-item"><label>${p}</label><input type="number" id="sc_${i}" placeholder="桿數"></div>`;
+            });
+            if(html === "") html = "<p style='color:#777;'>請先至「設定」輸入球員名單</p>";
+            document.getElementById('scoreGrid').innerHTML = html;
+        }
+
+        async function submitScores() {
+            let hole = document.getElementById('holeSelect').value;
+            if(!hole) return alert("請選洞！");
+            let scores = {};
+            let hasScore = false;
+            for(let i=0; i<4; i++) {
+                let input = document.getElementById(`sc_${i}`);
+                if(input) { scores[i] = input.value; if(input.value) hasScore = true; }
+            }
+            if(!hasScore) return alert("請填寫成績");
+            
+            const res = await apiCall("submitHoleScores", { pin: currentPin, hole: hole, scores: scores });
+            if (res) {
+                alert(res.message);
+                if(hole < 18) document.getElementById('holeSelect').value = parseInt(hole) + 1;
+                for(let i=0; i<4; i++) { let el = document.getElementById(`sc_${i}`); if(el) el.value = ""; }
             }
         }
 
-        // 打球專用：直通車導向
-        function goToDirectApp() {
-            if (!targetRoom) return;
-            // 💡 修正：使用 replace 取代 href。這會把這頁從瀏覽器歷史中「抹除」，
-            // 確保使用者在記分板按返回鍵時，是直接回到 scoregenie.app 首頁！
-            window.location.replace(gasUrl + '?room=' + targetRoom);
-        }
-
-        // 大廳功能：建立球局
-        function createRoom() {
-            let btn = document.querySelector('.btn-purple');
-            btn.textContent = '準備中...';
-            btn.disabled = true;
-
-            let iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = gasUrl + '?action=create'; 
-            document.body.appendChild(iframe);
+        // =========================================
+        // 設定功能
+        // =========================================
+        async function loadSetupData() {
+            const res = await apiCall("getSetupData", { pin: currentPin });
+            if (!res) return;
             
-            // 監聽 GAS 回傳的成功訊號
-            window.addEventListener('message', function(event) {
-                // 💡 修正：放寬跨網域檢查，因為 GAS 會動態轉址到 googleusercontent.com
-                if (event.data && event.data.type === 'roomCreated') {
-                    // 成功拿到房號，跳轉到啟動畫面！
-                    window.location.href = '?room=' + event.data.pin;
-                }
-            }, false);
+            if (res.isCourseLocked) {
+                document.getElementById('setupCourseSelect').disabled = true;
+                document.getElementById('setupCourseSelect').innerHTML = `<option>${res.courseInfo} (總幹事已鎖定)</option>`;
+            }
+            
+            let html = "";
+            for(let i=0; i<4; i++) {
+                html += `<input type="text" id="sp_${i}" value="${res.players[i] || ''}" placeholder="球員 ${i+1} 姓名">`;
+            }
+            document.getElementById('setupPlayers').innerHTML = html;
         }
 
-        // 大廳功能：加入球局
-        function joinRoom() {
-            var pin = document.getElementById('roomPin').value;
-            if (!pin || pin.length !== 4) { alert("請輸入 4 位數 PIN 碼"); return; }
-            window.location.href = '?room=' + pin;
+        async function applyCourse() {
+            let course = document.getElementById('setupCourseSelect').value;
+            let tee = document.getElementById('setupTeeOff').value;
+            if(!course) return;
+            const res = await apiCall("applyCourseData", { pin: currentPin, courseName: course, teeOff: tee, hdcpMode: "1", manualPars:[], manualStdHdcp:[] });
+            if (res) alert(res.message);
+        }
+
+        async function saveSetup() {
+            let players = [];
+            for(let i=0; i<4; i++) players.push(document.getElementById(`sp_${i}`).value);
+            const res = await apiCall("saveSetupData", { pin: currentPin, players: players, handicaps: [], dynMode: "None", initRank: [] });
+            if (res) {
+                alert("儲存成功！");
+                navTo('page-main');
+                refreshMainBoard();
+            }
+        }
+
+        // =========================================
+        // 🏆 總幹事多局賽事功能
+        // =========================================
+        async function createTournament() {
+            let course = document.getElementById('tourneyCourseSelect').value;
+            let count = document.getElementById('tourneyGroupCount').value;
+            if(!course) return alert("請選擇球場");
+            
+            const res = await apiCall("createTournament", { courseName: course, groupCount: count });
+            if (res) {
+                currentTourneyId = res.tourneyId;
+                let html = "";
+                res.pins.forEach((pin, i) => {
+                    let link = window.location.origin + window.location.pathname + "?room=" + pin;
+                    html += `<div style="margin-bottom:10px;"><strong style="color:#ce93d8;">第 ${i+1} 組：</strong> <span style="font-size:20px; color:#fff;">${pin}</span> <br><a href="${link}" target="_blank" style="color:#81d4fa; font-size:12px;">直接進入連結</a></div>`;
+                });
+                document.getElementById('tourneyPinsArea').innerHTML = html;
+                document.getElementById('tourneyDashboardUrl').value = window.location.origin + window.location.pathname + "?tourney=" + res.tourneyId;
+                navTo('page-tourney-result');
+            }
+        }
+
+        function copyTourneyInfo() {
+            let text = "🏆 球隊賽事開局完成！\n\n結算看版：\n" + document.getElementById('tourneyDashboardUrl').value + "\n\n各組 PIN 碼 (請至 scoregenie.app 輸入)：\n";
+            document.getElementById('tourneyPinsArea').querySelectorAll('strong').forEach((el, i) => {
+                text += el.innerText + " " + el.nextElementSibling.innerText + "\n";
+            });
+            navigator.clipboard.writeText(text).then(() => alert("已複製！可以直接貼到 LINE"));
+        }
+
+        function goToTourneyDashboard() {
+            window.location.href = "?tourney=" + currentTourneyId;
+        }
+
+        let currentTourneyData = [];
+        async function loadTourneyDashboard(tid) {
+            currentTourneyId = tid;
+            navTo('page-tourney-dashboard');
+            document.querySelector('#tourneyLeaderboard tbody').innerHTML = "<tr><td colspan='5'>載入中...</td></tr>";
+            
+            const res = await apiCall("getTournamentDashboard", { tourneyId: tid });
+            if (!res) return;
+            
+            document.getElementById('tdCourseName').textContent = "🏟️ " + res.courseName + " | 📅 " + res.date;
+            
+            // 加入預設差點為 0
+            currentTourneyData = res.players.map(p => ({ ...p, netScore: p.gross === "未開球" ? 999 : (p.gross - 0), handicap: 0 }));
+            renderTourneyLeaderboard();
+        }
+
+        function renderTourneyLeaderboard() {
+            let html = "";
+            currentTourneyData.forEach((p, i) => {
+                let reportLink = `?report=${p.pin}_${new Date().toISOString().split('T')[0].replace(/-/g,'')}`; // 模擬
+                html += `<tr>
+                    <td style="font-weight:bold;">${p.name}</td>
+                    <td style="color:#aaa;">${p.gross}</td>
+                    <td><input type="number" class="net-input" value="${p.handicap}" onchange="updateHandicap(${i}, this.value)"></td>
+                    <td style="color:#81c784; font-weight:bold; font-size:16px;">${p.gross === "未開球" ? "-" : (p.gross - p.handicap)}</td>
+                    <td><a href="?report=${p.pin}_dummy" style="color:#81d4fa; font-size:12px;">該組戰報</a></td>
+                </tr>`;
+            });
+            document.querySelector('#tourneyLeaderboard tbody').innerHTML = html;
+        }
+
+        function updateHandicap(index, val) {
+            let h = parseFloat(val) || 0;
+            currentTourneyData[index].handicap = h;
+            if (currentTourneyData[index].gross !== "未開球") {
+                currentTourneyData[index].netScore = currentTourneyData[index].gross - h;
+            }
+        }
+
+        function sortTourneyLeaderboard() {
+            currentTourneyData.sort((a, b) => a.netScore - b.netScore);
+            renderTourneyLeaderboard();
+        }
+
+        // =========================================
+        // Premium 戰報
+        // =========================================
+        async function generateShareLink() {
+            const res = await apiCall("createPermanentReport", { pin: currentPin });
+            if (res && res.permId) {
+                let url = window.location.origin + window.location.pathname + "?report=" + res.permId;
+                navigator.clipboard.writeText(url).then(() => alert("🎉 戰報網址已複製！\n" + url));
+            }
+        }
+
+        async function loadReport(reportId) {
+            navTo('page-report');
+            const res = await apiCall("getPremiumReportData", { reportId: reportId });
+            if(!res) return;
+            
+            document.getElementById("repCourseDate").textContent = "🏟️ " + res.courseInfo;
+            document.getElementById("repKingName").textContent = res.bountyKing ? res.bountyKing.name : "平手";
+            
+            let html = "";
+            res.playerStats.forEach(p => {
+                html += `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #333;">
+                    <span style="font-weight:bold;">${p.name}</span>
+                    <span style="color:#aaa;">總桿 ${p.grossScore}</span>
+                </div>`;
+            });
+            document.getElementById('repStatsList').innerHTML = html;
         }
     </script>
 </body>
