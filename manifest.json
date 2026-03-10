@@ -1,22 +1,23 @@
-```json
 {
   "name": "ScoreGenie",
   "short_name": "ScoreGenie",
   "description": "高爾夫最強記分與對戰精靈",
-  "start_url": "./",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",
   "icons": [
     {
-      "src": "icon.png",
+      "src": "./icon.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icon.png",
-      "sizes": "2048x2048",
-      "type": "image/png"
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
