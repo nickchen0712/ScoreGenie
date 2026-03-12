@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ScoreGenie | 高爾夫最強記分與對戰精靈</title>
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ScoreGenie">
@@ -50,11 +49,9 @@
         .data-table th { background: linear-gradient(135deg, #0277bd, #01579b); }
         .data-table tr:nth-child(even) { background-color: #252525; }
 
-        /* Loader 全螢幕 */
         #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(10,10,10,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; transition: opacity 0.3s ease; }
         .genie-loader { font-size: 65px; margin-bottom: 15px; animation: float 1.5s ease-in-out infinite; filter: drop-shadow(0px 0px 15px rgba(206, 147, 216, 0.6)); }
         
-        /* 💡 迷你精靈 Loader (實戰不干擾畫面) */
         #miniLoader { position: fixed; top: 15px; right: 15px; background: rgba(30,30,30,0.9); padding: 8px 15px; border-radius: 20px; border: 1px solid #ce93d8; color: #ce93d8; font-size: 13px; font-weight: bold; z-index: 10001; display: none; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .mini-genie { display: inline-block; animation: bounce 1s infinite; font-size: 16px; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
@@ -315,7 +312,6 @@
         
         let currentPin = ""; let currentTourneyId = ""; let currentTourneyPars = [];
 
-        // 💡 升級版 apiCall：根據 useFullLoader 決定顯示全螢幕或右上角迷你精靈
         async function apiCall(action, payload = {}, useFullLoader = false, customText = "處理中...") {
             if(useFullLoader) { document.getElementById('loaderText').textContent = customText; showLoader(); }
             else { document.getElementById('miniLoaderText').textContent = customText; document.getElementById('miniLoader').style.display = 'flex'; }
@@ -385,15 +381,17 @@
         function forceExit() { localStorage.removeItem("sg_pin"); currentPin = ""; window.location.href = '?'; }
 
         async function refreshMainBoard() {
-            // 💡 讀取名單時使用 mini loader
-            const res = await apiCall("getPlayers", { pin: currentPin }, false, "同步名單...");
+            // 💡 取得名單時，後端已經一併把四人戰況打包送來了！
+            const res = await apiCall("getPlayers", { pin: currentPin }, false, "同步資料...");
             if (!res) return; let html = "";
             res.players.forEach((p, i) => { if(p) html += `<div class="score-grid-item"><label>${p}</label><input type="number" id="sc_${i}" class="score-input" placeholder="桿數" inputmode="numeric" pattern="[0-9]*"></div>`; });
             if(html === "") html = "<p style='color:#777;'>請先至「設定」輸入球員名單</p>"; document.getElementById('scoreGrid').innerHTML = html;
 
             let inputs = document.querySelectorAll('.score-input');
             inputs.forEach((inp, idx) => { inp.addEventListener('input', function() { let val = this.value; if ((val.length === 1 && parseInt(val) >= 2) || val.length >= 2) { if (idx + 1 < inputs.length) inputs[idx+1].focus(); else this.blur(); } }); });
-            loadQuickDynGame();
+            
+            // 💡 直接用打包送來的資料渲染，不用再要一次！
+            renderQuickDynGame(res.dynData);
         }
 
         async function submitScores() {
@@ -405,7 +403,7 @@
             let btn = document.getElementById('btnSubmitScore'); let origText = btn.textContent;
             btn.innerHTML = '🧞‍♂️ 寫入中...'; btn.disabled = true;
             
-            // 💡 送出成績使用 mini loader，不遮擋畫面
+            // 💡 寫入成績時，後端會在記憶體算完戰況一起傳回來！
             const res = await apiCall("submitHoleScores", { pin: currentPin, hole: hole, scores: scores }, false, "寫入成績..."); 
             
             if (res) { 
@@ -414,12 +412,14 @@
                 if(hole < 18) document.getElementById('holeSelect').value = parseInt(hole) + 1; 
                 let inputs = document.querySelectorAll('.score-input'); inputs.forEach(inp => inp.value = ""); if(inputs.length > 0) inputs[0].focus();
                 if (document.getElementById('scorecardArea').style.display === 'block') loadScorecard();
-                loadQuickDynGame();
+                
+                // 💡 直接更新畫面，完全 0 延遲！
+                if (res.dynData) renderQuickDynGame(res.dynData);
             } else { btn.innerHTML = origText; btn.disabled = false; }
         }
 
-        async function loadQuickDynGame() {
-            const res = await apiCall("getDynamicGameData", { pin: currentPin }, false, "同步戰況...");
+        // 💡 專門用來把記憶體資料畫上螢幕的函數
+        function renderQuickDynGame(res) {
             let view = document.getElementById('quickDynView');
             if (!res || res.error) { view.style.display = 'none'; return; }
             let lastHole = res.history.length > 0 ? res.history[res.history.length - 1] : null; let nextRankHtml = "", ptsHtml = "";
