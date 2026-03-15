@@ -53,8 +53,7 @@
         #miniLoader { position: fixed; top: 15px; right: 15px; background: rgba(30,30,30,0.9); padding: 8px 15px; border-radius: 20px; border: 1px solid #ce93d8; color: #ce93d8; font-size: 13px; font-weight: bold; z-index: 10001; display: none; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .mini-genie { display: inline-block; animation: bounce 1s infinite; font-size: 16px; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
-
+        
         .gold-title { font-size: 36px; margin: 0 0 20px 0; background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728); -webkit-background-clip: text; color: transparent; text-shadow: 0px 4px 10px rgba(212, 175, 55, 0.3); letter-spacing: 2px; }
         .premium-card { background: linear-gradient(145deg, #1c1c1c, #121212); border: 1px solid #444; border-radius: 15px; padding: 25px 20px; margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.6); position: relative; overflow: hidden; }
         .premium-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(to right, #ab47bc, #ff9800); }
@@ -67,62 +66,46 @@
         .premium-table th { background: linear-gradient(135deg, #b38728, #fbf5b7, #aa771c); color: #121212; padding: 8px; border: 1px solid #333; }
         .premium-table td { padding: 8px; border: 1px solid #333; text-align: center; }
         .premium-table tr:nth-child(even) { background-color: #222; }
-        .pt-title { color: #ffd700; font-size: 18px; text-align: left; margin: 30px 0 10px 0; border-bottom: 1px solid #ffd700; padding-bottom: 5px;}
-
+        
         .net-input { width: 60px; padding: 5px; font-size: 16px; margin: 0; border: 1px solid #888; background: #333; color: #fff; text-align:center;}
         .dyn-rank-select { width: 23%; font-size: 12px; padding: 6px; border-radius: 4px; border: 1px solid #444; background: #333; color: #fff; }
+        
+        /* 💡 轉 90 度的英文名字專屬類別 */
+        .rotate-eng { writing-mode: vertical-rl; transform: rotate(180deg); display: inline-block; white-space: nowrap; margin: auto; padding: 2px 0; }
     </style>
 </head>
 <body>
 
-    <div id="loader" style="display:none;">
-        <div class="genie-loader">🧞‍♂️</div>
-        <div id="loaderText" style="color:#ce93d8; font-size:20px; font-weight:bold; letter-spacing:2px;">魔法連線中...</div>
-    </div>
+    <div id="loader" style="display:none;"><div class="genie-loader">🧞‍♂️</div><div id="loaderText" style="color:#ce93d8; font-size:20px; font-weight:bold; letter-spacing:2px;">魔法連線中...</div></div>
     <div id="miniLoader"><span class="mini-genie">🧞‍♂️</span> <span id="miniLoaderText">處理中...</span></div>
 
     <div id="dynGameModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; overflow-y:auto;">
         <div style="margin: 20px auto; width: 95%; max-width: 500px; background:#1e1e1e; padding:20px; border-radius:12px; text-align: center; border: 1px solid #444;">
-            <h3 style="color:#ce93d8; margin-top:0;">🎲 四人遊戲戰況</h3>
-            <div id="dynGameContent" style="margin-bottom:20px; overflow-x:auto;"></div>
-            <button onclick="document.getElementById('dynGameModal').style.display='none'" class="btn-gray">關閉視窗</button>
+            <h3 style="color:#ce93d8; margin-top:0;">🎲 四人遊戲戰況</h3><div id="dynGameContent" style="margin-bottom:20px; overflow-x:auto;"></div><button onclick="document.getElementById('dynGameModal').style.display='none'" class="btn-gray">關閉視窗</button>
         </div>
     </div>
-
-    <div id="imageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; overflow-y:auto;">
-        <div style="margin: 20px auto; width: 90%; max-width: 400px; text-align: center;">
-            <h3 style="color:#fff;">長按圖片即可儲存</h3>
-            <img id="generatedImage" style="width:100%; border-radius:8px; border:2px solid white; margin-bottom: 20px;">
-            <button onclick="closeImageModal()" class="btn-red">關閉視窗並離開</button>
-        </div>
-    </div>
-    <div id="captureContainer" style="position:absolute; top:-9999px; left:-9999px; width: 800px; background:white; padding:20px; text-align:center;"></div>
 
     <div id="page-lobby" class="page-container active-page">
         <div class="card">
             <h1 style="color: #ce93d8; font-size: 32px; margin-bottom: 5px;">🧞‍♂️ ScoreGenie</h1>
             <p>高爾夫最強記分與對戰精靈</p>
             <button onclick="createSingleRoom()" class="btn-purple">✨ 建立單局記分</button>
-            <button onclick="navTo('page-tourney-setup')" class="btn-gold">🏆 建立球隊模式 (總幹事)</button>
-            <div style="margin: 20px 0; border-top: 1px solid #444; position: relative;"><span style="background: #1e1e1e; padding: 0 10px; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #888; font-size: 14px;">或加入球局</span></div>
-            <input type="number" id="joinPinInput" placeholder="輸入 4 位數 PIN 碼" inputmode="numeric" pattern="[0-9]*" style="letter-spacing: 5px; font-size: 20px; font-weight: bold;">
-            <button onclick="joinRoom()" class="btn-green">🤝 加入球局</button>
+            <button onclick="navTo('page-tourney-setup')" class="btn-gold">🏆 建立球隊聯賽 (總幹事)</button>
+            <div style="margin: 20px 0; border-top: 1px solid #444; position: relative;"><span style="background: #1e1e1e; padding: 0 10px; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #888; font-size: 14px;">或加入球局 / 管理賽事</span></div>
+            <input type="text" id="joinPinInput" placeholder="輸入 球局PIN 或 球隊代碼" style="letter-spacing: 3px; font-size: 20px; font-weight: bold; text-transform: uppercase;">
+            <button onclick="joinRoom()" class="btn-green">🤝 進入</button>
         </div>
     </div>
 
     <div id="page-tourney-setup" class="page-container">
         <div class="card">
             <h2 class="gold-title" style="font-size:28px;">🏆 球隊賽事開局</h2>
-            <label style="color:#81d4fa; font-weight:bold;">1. 選擇賽事球場</label>
-            <select id="tourneyCourseSelect"><option>載入中...</option></select>
+            <label style="color:#81d4fa; font-weight:bold;">1. 選擇賽事球場</label><select id="tourneyCourseSelect"><option>載入中...</option></select>
             <label style="color:#81d4fa; font-weight:bold;">2. 預計開球組數</label>
-            <select id="tourneyGroupCount">
-                <option value="2">2 組</option><option value="3">3 組</option><option value="4">4 組</option>
-                <option value="5">5 組</option><option value="6">6 組</option><option value="8">8 組</option>
-            </select>
+            <select id="tourneyGroupCount"><option value="2">2 組</option><option value="3">3 組</option><option value="4">4 組</option><option value="5">5 組</option><option value="6">6 組</option><option value="8">8 組</option><option value="10">10 組</option></select>
             <label style="color:#81d4fa; font-weight:bold;">3. 預設讓桿模式</label>
             <select id="tourneyHdcpMode"><option value="1">標準模式 (1-18)</option><option value="2">先讓 4, 5 桿洞</option><option value="3">依序 4->5->3 桿洞</option></select>
-            <button onclick="createTournament()" class="btn-gold" style="margin-top:20px;">🚀 一鍵產生賽事</button>
+            <button onclick="createTournament()" class="btn-gold" style="margin-top:20px;">🚀 一鍵產生專屬代碼與賽事</button>
             <button onclick="navTo('page-lobby')" class="btn-gray">🔙 取消返回</button>
         </div>
     </div>
@@ -130,12 +113,47 @@
     <div id="page-tourney-result" class="page-container">
         <div class="card" style="max-width:500px;">
             <h2 style="color:#81c784;">✅ 賽事建立成功！</h2>
+            <h3 style="color:#ffd700; margin:0 0 10px 0;">球隊專屬代碼：<span id="displayTeamCode" style="font-size:32px; letter-spacing:5px;"></span></h3>
+            <p style="font-size:13px;">(請記下此代碼，日後總幹事於首頁輸入即可進入管理)</p>
             <div id="tourneyPinsArea" style="background:#2c2c2c; padding:15px; border-radius:8px; margin-bottom:20px; text-align:left;"></div>
-            <button onclick="goToBatchSetup()" class="btn-purple" style="margin-bottom: 20px;">📝 批次輸入全隊名單與讓桿</button>
-            <p style="color:#ffd700; font-size:14px;">全隊即時排行榜網址：</p>
-            <input type="text" id="tourneyDashboardUrl" readonly style="font-size:12px; color:#aaa;" onclick="this.select()">
-            <button onclick="copyTourneyInfo()" class="btn-blue">📋 複製資訊分享至 LINE</button>
-            <button onclick="goToTourneyDashboard()" class="btn-gold">📊 進入全隊即時排行榜</button>
+            <button onclick="copyTourneyInfo()" class="btn-blue">📋 複製資訊分享給各組</button>
+            <button onclick="goToTourneyAdmin(currentTourneyId)" class="btn-gold">⚙️ 進入總幹事專屬後台</button>
+        </div>
+    </div>
+
+    <div id="page-tourney-admin" class="page-container" style="justify-content: flex-start;">
+        <h1 class="gold-title" style="margin-top:20px;">👑 總幹事專頁</h1>
+        <h3 style="color:#81d4fa; margin:0 0 20px 0;">賽事代碼：<span id="hubTeamCode" style="letter-spacing:3px;"></span></h3>
+        <div class="card" style="max-width: 600px; padding: 25px 20px;">
+            
+            <h4 style="text-align:left; color:#ce93d8; border-bottom:1px solid #444; padding-bottom:5px;">第一步：賽前設定</h4>
+            <button onclick="goToBatchSetup()" class="btn-purple" style="margin-bottom:25px;">📝 批次輸入全隊名單與讓桿</button>
+            
+            <h4 style="text-align:left; color:#81c784; border-bottom:1px solid #444; padding-bottom:5px;">第二步：賽事進行中</h4>
+            <button onclick="window.open('?liveboard=' + currentTourneyId, '_blank')" class="btn-blue" style="margin-bottom:25px;">📊 開啟全隊即時排行榜 (另開視窗)</button>
+
+            <h4 style="text-align:left; color:#ffcc80; border-bottom:1px solid #444; padding-bottom:5px;">第三步：賽後結算 (新新貝利亞)</h4>
+            <div style="background:#252525; padding:15px; border-radius:8px; margin-bottom:20px; text-align:left;">
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="text" id="peoriaHoles" placeholder="輸入 6 個隱藏洞 (例: 1,4,7...)" style="margin:0; font-size:14px; padding:10px;">
+                    <button onclick="drawPeoriaHoles()" class="btn-gray" style="margin:0; padding:10px; width:120px; font-size:14px;">🎲 隨機抽洞</button>
+                </div>
+                <button onclick="calcNewNewPeoria()" class="btn-orange" style="margin-top:10px; padding:10px; font-size:14px;">⚡ 計算差點並預覽淨桿排名</button>
+            </div>
+            
+            <div style="overflow-x:auto; display:none;" id="adminLeaderboardArea">
+                <table class="data-table" id="adminLeaderboard">
+                    <thead><tr><th style="width:15%">淨桿名次</th><th style="width:25%">姓名</th><th style="width:20%">總桿</th><th style="width:20%; background:#e65100;">球隊差點</th><th style="width:20%; background:#2e7d32;">淨桿</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+                <p style="font-size:12px; color:#aaa;">(可直接修改差點欄位微調)</p>
+            </div>
+
+            <button onclick="generateTeamReport()" class="btn-gold" style="margin-top:20px; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);">🎉 產生最終戰報 (將封存賽事)</button>
+            
+            <hr style="margin: 30px 0 20px 0; border-color:#444;">
+            <button onclick="window.location.href='?'" class="btn-gray">🔙 登出返回首頁</button>
+            <button onclick="adminDeleteTourney()" class="btn-red" style="font-size:12px; margin-top:10px; background:transparent; color:#ef5350; border:1px solid #ef5350;">🗑️ 徹底刪除此賽事 (不保留)</button>
         </div>
     </div>
 
@@ -145,49 +163,24 @@
             <button id="batchAutoFillBtn" onclick="batchAutoFillHandicaps()" class="btn-purple" style="display:none; font-size:14px; padding:10px; margin-bottom:20px;">🪄 從 2026 表格自動帶入所有讓桿</button>
             <div id="batchInputArea"></div>
             <button onclick="saveBatchSetup()" class="btn-green" style="margin-top:20px;">💾 儲存所有設定</button>
-            <button onclick="goToTourneyDashboard()" class="btn-gray">🔙 返回排行榜</button>
+            <button onclick="goToTourneyAdmin(currentTourneyId)" class="btn-gray">🔙 返回總幹事專頁</button>
         </div>
     </div>
 
-    <div id="page-tourney-dashboard" class="page-container" style="justify-content: flex-start;">
-        <h1 class="gold-title" style="margin-top:20px; font-size:32px;">🏆 全隊即時排行榜</h1>
-        <h3 id="tdCourseName" style="color:#81d4fa; margin:0 0 20px 0;"></h3>
-        <div class="card" style="max-width: 800px; padding: 15px;">
-            <button id="btnRefreshLeaderboard" onclick="loadTourneyDashboard(currentTourneyId)" class="btn-blue" style="margin-bottom: 15px; padding: 10px; font-size: 16px;">🔄 更新最新戰況</button>
-            <div style="overflow-x:auto;">
-                <table class="pga-table" id="pgaLeaderboard">
-                    <thead>
-                        <tr><th style="width:15%">Pos</th><th style="width:25%">Player</th><th style="width:15%">To Par</th><th style="width:15%">Thru</th><th style="width:15%">Gross</th><th style="width:10%">1</th><th style="width:10%">2</th><th style="width:10%">3</th><th style="width:10%">4</th><th style="width:10%">5</th><th style="width:10%">6</th><th style="width:10%">7</th><th style="width:10%">8</th><th style="width:10%">9</th><th style="width:10%">10</th><th style="width:10%">11</th><th style="width:10%">12</th><th style="width:10%">13</th><th style="width:10%">14</th><th style="width:10%">15</th><th style="width:10%">16</th><th style="width:10%">17</th><th style="width:10%">18</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-            <button id="btnBackToMyGame" onclick="navTo('page-main')" class="btn-green" style="display:none; margin-top:20px;">🏌️‍♂️ 返回我的記分板</button>
-            <button onclick="window.location.href='?'" class="btn-gray">🔙 返回大廳</button>
-            <button onclick="unlockTourneyAdmin()" style="background:transparent; color:#555; border:none; box-shadow:none; font-size:12px; margin-top:30px; text-decoration:underline;">🛡️ 總幹事算分與封存</button>
+    <div id="page-liveboard" class="page-container" style="justify-content: flex-start; padding: 10px;">
+        <h2 class="gold-title" style="margin:10px 0; font-size:28px;">🏆 全隊即時排行榜</h2>
+        <h4 id="liveCourseName" style="color:#81d4fa; margin:0 0 15px 0;"></h4>
+        
+        <div style="width: 100%; max-width: 1000px; text-align: left; margin-bottom: 10px;">
+            <button id="btnLiveRefresh" onclick="loadLiveboard(currentTourneyId)" class="btn-blue" style="width:auto; padding: 8px 20px; font-size: 14px; display:inline-block;">🔄 更新戰況</button>
+            <span style="color:#aaa; font-size:12px; margin-left:10px;">(建議橫放手機觀看最佳)</span>
         </div>
-    </div>
-
-    <div id="page-tourney-admin" class="page-container" style="justify-content: flex-start;">
-        <h1 class="gold-title" style="margin-top:20px;">⚙️ 總幹事結算中心</h1>
-        <div class="card" style="max-width: 600px; padding: 15px;">
-            <div style="background:#252525; padding:15px; border-radius:8px; margin-bottom:20px; text-align:left; border:1px solid #444;">
-                <h4 style="margin:0 0 10px 0; color:#ffcc80;">🧮 新新貝利亞敘獎計算</h4>
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <input type="text" id="peoriaHoles" placeholder="輸入 6 個隱藏洞 (例: 1,4,7...)" style="margin:0; font-size:14px; padding:10px;">
-                    <button onclick="drawPeoriaHoles()" class="btn-gray" style="margin:0; padding:10px; width:120px; font-size:14px;">🎲 隨機抽洞</button>
-                </div>
-                <button onclick="calcNewNewPeoria()" class="btn-orange" style="margin-top:10px; padding:10px; font-size:14px;">⚡ 計算差點並重新排名淨桿</button>
-            </div>
-            <div style="overflow-x:auto;">
-                <table class="data-table" id="adminLeaderboard">
-                    <thead><tr><th style="width:15%">淨桿 Rank</th><th style="width:25%">姓名</th><th style="width:20%">總桿</th><th style="width:20%; background:#e65100;">球隊差點</th><th style="width:20%; background:#2e7d32;">淨桿</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-            <button onclick="generateTeamReport()" class="btn-gold" style="margin-top:15px; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);">📊 產生全隊終極報告 (將封存賽事)</button>
-            <button onclick="goToTourneyDashboard()" class="btn-gray">🔙 返回即時排行榜</button>
-            <button onclick="adminDeleteTourney()" class="btn-red" style="font-size:12px; margin-top:30px; background:transparent; color:#ef5350; border:1px solid #ef5350;">🗑️ 徹底刪除賽事 (不保留)</button>
+        
+        <div style="width: 100%; max-width: 1000px; overflow-x: auto; background: #1e1e1e; border-radius: 8px; border: 1px solid #444; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
+            <table class="pga-table" id="livePgaTable" style="margin:0;">
+                <thead><tr><th style="width:50px;">Pos</th><th style="width:80px;">Player</th><th style="width:60px;">To Par</th><th style="width:50px;">Thru</th><th style="width:60px;">Gross</th><th style="width:30px;">1</th><th style="width:30px;">2</th><th style="width:30px;">3</th><th style="width:30px;">4</th><th style="width:30px;">5</th><th style="width:30px;">6</th><th style="width:30px;">7</th><th style="width:30px;">8</th><th style="width:30px;">9</th><th style="width:30px;">10</th><th style="width:30px;">11</th><th style="width:30px;">12</th><th style="width:30px;">13</th><th style="width:30px;">14</th><th style="width:30px;">15</th><th style="width:30px;">16</th><th style="width:30px;">17</th><th style="width:30px;">18</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
     </div>
 
@@ -211,7 +204,9 @@
                 <p style="font-size: 16px; font-weight: bold; text-align: left; margin: 0 0 10px 0; color: #81d4fa;">🔗 各組詳細戰報連結</p>
                 <div id="trGroupLinks"></div>
             </div>
-            <button onclick="window.location.href='?'" class="btn-gray" style="margin-top:30px;">➕ 我也要開局</button>
+            
+            <button id="btnShareTeamReport" onclick="shareTeamReportLink()" class="btn-gold" style="margin-top:10px;">🔗 複製此全隊戰報網址分享</button>
+            <button onclick="window.location.href='?'" class="btn-gray" style="margin-top:20px;">➕ 我也要開局</button>
         </div>
     </div>
 
@@ -222,7 +217,7 @@
                 <button onclick="leaveRoom()" class="btn-red" style="width: auto; padding: 8px 12px; font-size: 14px; margin: 0; box-shadow: none;">離開</button>
             </div>
             <div class="pin-display">球局 PIN 碼：<span id="displayPin">----</span></div>
-            <button id="btnSwitchToTourney" onclick="goToTourneyDashboard()" class="btn-gold" style="display:none; margin-bottom: 20px;">🏆 查看全隊即時排行榜</button>
+            <button id="btnSwitchToTourney" onclick="window.open('?liveboard=' + currentTourneyId, '_blank')" class="btn-gold" style="display:none; margin-bottom: 20px;">🏆 開啟全隊即時排行榜</button>
             <button onclick="navTo('page-setup'); loadSetupData();" class="btn-gray" style="margin-bottom: 20px;">⚙️ 設定比賽資訊 (名單/讓桿)</button>
             
             <select id="holeSelect"><option value="" disabled selected>請選擇洞號</option></select>
@@ -336,31 +331,57 @@
         function hideLoader() { document.getElementById('loader').style.display = 'none'; }
         function isAdminAuth(pin) { return /^(\d)\1{3}$/.test(pin) || ["1111", "2222", "3333", "4444", "5555", "6666", "7777", "8888", "9999", "0000", "7867"].includes(pin); }
 
+        // 💡 英文名字轉 90 度功能
+        function formatNameForDisplay(name) {
+            if (/^[A-Za-z0-9\s\.\-_]+$/.test(name.trim())) {
+                return `<div class="rotate-eng">${name}</div>`;
+            }
+            return name;
+        }
+
         window.onload = async function() {
             var urlParams = new URLSearchParams(window.location.search);
-            var room = urlParams.get('room'); var report = urlParams.get('report'); var tourney = urlParams.get('tourney'); var treport = urlParams.get('treport');
+            var room = urlParams.get('room'); var report = urlParams.get('report'); 
+            var tourney = urlParams.get('tourney'); var treport = urlParams.get('treport');
+            var liveboard = urlParams.get('liveboard'); // 新增 Liveboard 參數
+            
             const courseData = await apiCall("getCourseList", {}, true, "魔法連線中...");
             if (courseData) { let opts = '<option value="" disabled selected>請選擇球場</option>'; courseData.courses.forEach(c => opts += `<option value="${c}">${c}</option>`); document.getElementById('tourneyCourseSelect').innerHTML = opts; document.getElementById('setupCourseSelect').innerHTML = opts; }
             let holes = '<option value="" disabled selected>選擇洞號</option>'; for(let i=1; i<=18; i++) holes += `<option value="${i}">第 ${i} 洞</option>`; document.getElementById('holeSelect').innerHTML = holes;
             
-            if (treport) { loadTeamReport(treport); } else if (report) { loadReport(report); } else if (tourney) { loadTourneyDashboard(tourney); }
-            else if (room) { joinRoom(room); } else { let saved = localStorage.getItem("sg_pin"); if(saved) joinRoom(saved); else navTo('page-lobby'); }
+            // 路由導向
+            if (treport) { loadTeamReport(treport); } 
+            else if (report) { loadReport(report); } 
+            else if (liveboard) { loadLiveboard(liveboard); } // 直接進入全頁橫式排行榜
+            else if (tourney) { goToTourneyAdmin(tourney); } // 如果知道 tourney code，通常是總幹事
+            else if (room) { joinRoom(room); } 
+            else { let saved = localStorage.getItem("sg_pin"); if(saved) joinRoom(saved); else navTo('page-lobby'); }
         };
 
         async function createSingleRoom() { const res = await apiCall("createRoom", {}, true, "建立球局..."); if (res) { localStorage.setItem("isCreator_" + res.pin, "true"); enterMainPage(res.pin); } }
         
         async function joinRoom(manualPin) {
             let pin = manualPin || document.getElementById('joinPinInput').value; if(!pin) return;
+            pin = pin.toUpperCase().trim();
+            
             if (pin === "7867") {
                 localStorage.setItem("sg_super_admin", "true"); localStorage.removeItem("sg_pin");
-                alert("👑 歡迎總幹事！\n此裝置已永久開啟「最高管理員權限」。\n您可以直接點擊「建立球隊模式」開局，所有魔法按鈕皆已為您解鎖！");
+                alert("👑 歡迎總幹事！\n此裝置已永久開啟「最高管理員權限」。\n您可以自由建立賽事或修改任何球局！");
                 if(document.getElementById('joinPinInput')) document.getElementById('joinPinInput').value = "";
                 navTo('page-lobby'); return;
             }
             if (isAdminAuth(pin)) localStorage.setItem("sg_super_admin", "true");
+            
             const res = await apiCall("verifyRoom", { pin: pin }, true, "連線中...");
-            if (res && res.exists) { if (res.tourneyId) localStorage.setItem("current_tourney_" + pin, res.tourneyId); enterMainPage(pin); } 
-            else { alert("找不到此球局！"); localStorage.removeItem("sg_pin"); navTo('page-lobby'); }
+            if (res && res.exists) { 
+                // 如果回傳 isTeamAdmin，代表輸入的是球隊代碼，直接導向總幹事專頁
+                if (res.isTeamAdmin) { goToTourneyAdmin(res.tourneyId); }
+                else {
+                    if (res.tourneyId) localStorage.setItem("current_tourney_" + pin, res.tourneyId); 
+                    enterMainPage(pin); 
+                }
+            } 
+            else { alert("找不到此球局或代碼！"); localStorage.removeItem("sg_pin"); navTo('page-lobby'); }
         }
 
         function enterMainPage(pin) {
@@ -415,10 +436,18 @@
 
         async function loadScorecard() { var btn = document.getElementById("btnLoadScore"); btn.textContent = "載入中..."; btn.disabled = true; const res = await apiCall("getScorecardData", { pin: currentPin }, false, "產生記分卡..."); if (res && res.scoreData) { renderTable(res.scoreData); document.getElementById("scorecardArea").style.display = "block"; } btn.textContent = "📊 查看完整記分卡"; btn.disabled = false; }
         function closeScorecard() { document.getElementById("scorecardArea").style.display = "none"; }
-        function renderTable(data) { var courseInfo = data[1][0]; var transposed = data[0].map((col, i) => data.map(row => row[i])); var table = document.getElementById("scoreTable"); table.innerHTML = ""; var caption = table.createCaption(); caption.textContent = "🏟️ " + courseInfo; caption.style.fontWeight = "bold"; caption.style.padding = "10px"; caption.style.color = "#81d4fa"; var thead = table.createTHead(), tbody = table.createTBody(); transposed.forEach((row, rowIndex) => { var isHoleColumn = (rowIndex >= 1 && rowIndex <= 9) || (rowIndex >= 11 && rowIndex <= 19); var parValue = parseInt(row[1]); if (rowIndex === 0) { var tr = thead.insertRow(); row.forEach((cell, cellIndex) => { var th = document.createElement("th"); th.textContent = cell; if (cellIndex >= 22) th.style.backgroundColor = "#6a1b9a"; if (cellIndex === 2) { th.style.backgroundColor = "#444"; th.style.color = "#ccc"; th.style.fontSize = "12px"; } tr.appendChild(th); }); } else { if (rowIndex === 11) { var extraTr = tbody.insertRow(); transposed[0].forEach((headerCell, cellIndex) => { var th = document.createElement("th"); th.textContent = headerCell; th.style.backgroundColor = "#0277bd"; th.style.color = "white"; if (cellIndex >= 22) th.style.backgroundColor = "#6a1b9a"; if (cellIndex === 2) { th.style.backgroundColor = "#444"; th.style.color = "#ccc"; th.style.fontSize = "12px"; } extraTr.appendChild(th); }); } var tr = tbody.insertRow(); if (rowIndex >= 22) tr.className = "highlight-row"; row.forEach((cell, cellIndex) => { var td = document.createElement("td"); if (cellIndex === 1) { td.textContent = cell; td.style.color = "#64b5f6"; td.style.fontWeight = "bold"; } else if (cellIndex === 2) { td.textContent = cell; td.className = "score-hdcp"; } else if (isHoleColumn && cellIndex > 2 && cell !== "") { var score = parseInt(cell); if (!isNaN(score) && !isNaN(parValue)) { var diff = score - parValue; var span = document.createElement("span"); span.textContent = cell; span.className = "score-box "; if (diff <= -2) span.className += "shape-eagle"; else if (diff === -1) span.className += "shape-birdie"; else if (diff === 0) span.className += "shape-par"; else if (diff === 1) span.className += "shape-bogey"; else span.className += "shape-double"; td.appendChild(span); } else td.textContent = cell; } else td.textContent = cell; tr.appendChild(td); }); } }); }
+        function renderTable(data) {
+            var courseInfo = data[1][0]; var transposed = data[0].map((col, i) => data.map(row => row[i]));
+            var table = document.getElementById("scoreTable"); table.innerHTML = ""; var caption = table.createCaption(); caption.textContent = "🏟️ " + courseInfo; caption.style.fontWeight = "bold"; caption.style.padding = "10px"; caption.style.color = "#81d4fa"; var thead = table.createTHead(), tbody = table.createTBody();
+            transposed.forEach((row, rowIndex) => { var isHoleColumn = (rowIndex >= 1 && rowIndex <= 9) || (rowIndex >= 11 && rowIndex <= 19); var parValue = parseInt(row[1]);
+                if (rowIndex === 0) { var tr = thead.insertRow(); row.forEach((cell, cellIndex) => { var th = document.createElement("th"); th.innerHTML = cellIndex === 0 ? formatNameForDisplay(cell) : cell; if (cellIndex >= 22) th.style.backgroundColor = "#6a1b9a"; if (cellIndex === 2) { th.style.backgroundColor = "#444"; th.style.color = "#ccc"; th.style.fontSize = "12px"; } tr.appendChild(th); }); } 
+                else { if (rowIndex === 11) { var extraTr = tbody.insertRow(); transposed[0].forEach((headerCell, cellIndex) => { var th = document.createElement("th"); th.innerHTML = cellIndex === 0 ? formatNameForDisplay(headerCell) : headerCell; th.style.backgroundColor = "#0277bd"; th.style.color = "white"; if (cellIndex >= 22) th.style.backgroundColor = "#6a1b9a"; if (cellIndex === 2) { th.style.backgroundColor = "#444"; th.style.color = "#ccc"; th.style.fontSize = "12px"; } extraTr.appendChild(th); }); } var tr = tbody.insertRow(); if (rowIndex >= 22) tr.className = "highlight-row"; row.forEach((cell, cellIndex) => { var td = document.createElement("td"); if (cellIndex === 1) { td.innerHTML = cell; td.style.color = "#64b5f6"; td.style.fontWeight = "bold"; } else if (cellIndex === 2) { td.innerHTML = cell; td.className = "score-hdcp"; } else if (isHoleColumn && cellIndex > 2 && cell !== "") { var score = parseInt(cell); if (!isNaN(score) && !isNaN(parValue)) { var diff = score - parValue; var span = document.createElement("span"); span.innerHTML = cell; span.className = "score-box "; if (diff <= -2) span.className += "shape-eagle"; else if (diff === -1) span.className += "shape-birdie"; else if (diff === 0) span.className += "shape-par"; else if (diff === 1) span.className += "shape-bogey"; else span.className += "shape-double"; td.appendChild(span); } else td.innerHTML = cell; } else td.innerHTML = cell; tr.appendChild(td); }); } });
+        }
+
         async function loadMatchData() { var btn = document.getElementById("btnLoadMatch"); var orig = btn.textContent; btn.textContent = "載入中..."; btn.disabled = true; const res = await apiCall("getMatchResults", { pin: currentPin }, false, "計算對戰..."); if (res && res.matchData) { var tableBody = document.querySelector("#matchTable tbody"); tableBody.innerHTML = ""; res.matchData.forEach(row => { var tr = document.createElement("tr"); tr.innerHTML = `<td style="text-align:left; font-weight:bold;">${row.name}</td><td style="color:#aaa;">${row.hdcp}</td><td>${row.f9}</td><td>${row.b9}</td><td style="font-weight:bold; color:#ff8a80; background-color:#3e2723;">${row.all}</td><td style="font-weight:bold; color:#81d4fa; background-color:#01579b;">${row.nextHdcp}</td>`; tableBody.appendChild(tr); }); document.getElementById("matchArea").style.display = "block"; } btn.textContent = orig; btn.disabled = false; }
         function closeMatch() { document.getElementById("matchArea").style.display = "none"; }
-        async function loadDynamicGame() { var btn = document.getElementById("btnLoadDyn"); var orig = btn.textContent; btn.textContent = "計算中..."; btn.disabled = true; const res = await apiCall("getDynamicGameData", { pin: currentPin }, false, "計算四人遊戲..."); btn.textContent = orig; btn.disabled = false; if (res) { if (res.error) return alert(res.error); var html = `<p style='color:#aaa; font-size:14px; margin-bottom:15px;'>玩法模式：${res.mode}</p><h4 style='color:#ff8a80;'>💰 最終累計總分</h4><table class='dyn-table' style='margin-bottom:20px;'><thead><tr>`; res.players.forEach(p => html += `<th>${p}</th>`); html += "</tr></thead><tbody><tr>"; res.players.forEach(p => { var tot = res.finalTotals[p]; var color = tot > 0 ? "#ff5252" : (tot < 0 ? "#81c784" : "#ccc"); html += `<td style='font-weight:bold; font-size:16px; color:${color};'>${tot > 0 ? "+"+tot : tot}</td>`; }); html += "</tr></tbody></table><h4 style='color:#81d4fa;'>⛳ 逐洞戰況明細</h4><table class='dyn-table'><thead><tr><th style='width:10%;'>洞</th><th style='width:22%; font-size:11px;'>單洞排序</th><th style='width:28%; font-size:11px;'>對戰組合</th><th style='width:20%; font-size:12px;'>得分</th><th style='width:20%; font-size:11px;'>下洞順序</th></tr></thead><tbody>"; res.history.forEach(h => { var pts1 = h.ptsT1 > 0 ? "+"+h.ptsT1 : h.ptsT1; var pts2 = h.ptsT2 > 0 ? "+"+h.ptsT2 : h.ptsT2; var ptsHtml = `<span style='color:${h.ptsT1>0?"#ff5252":"#81c784"}'>T1: ${pts1}</span><br><span style='color:${h.ptsT2>0?"#ff5252":"#81c784"}'>T2: ${pts2}</span>`; html += `<tr><td>${h.hole}</td><td style='font-size:11px; color:#aaa;'>${h.rank.join("<br>↓<br>")}</td><td style='font-size:12px; font-weight:bold;'><span style='color:#ffb74d'>${h.team1.join(" & ")}</span><br>vs<br><span style='color:#81d4fa'>${h.team2.join(" & ")}</span></td><td style='font-size:12px; font-weight:bold;'>${ptsHtml}</td><td style='font-size:11px; color:#81c784;'>${h.nextRank.join("<br>↓<br>")}</td></tr>`; }); html += "</tbody></table>"; document.getElementById("dynGameContent").innerHTML = html; document.getElementById("dynGameModal").style.display = "block"; } }
+
+        async function loadDynamicGame() { var btn = document.getElementById("btnLoadDyn"); var orig = btn.textContent; btn.textContent = "計算中..."; btn.disabled = true; const res = await apiCall("getDynamicGameData", { pin: currentPin }, false, "計算四人遊戲..."); btn.textContent = orig; btn.disabled = false; if (res) { if (res.error) return alert(res.error); var html = `<p style='color:#aaa; font-size:14px; margin-bottom:15px;'>玩法模式：${res.mode}</p><h4 style='color:#ff8a80;'>💰 最終累計總分</h4><table class='dyn-table' style='margin-bottom:20px;'><thead><tr>`; res.players.forEach(p => html += `<th>${p}</th>`); html += "</tr></thead><tbody><tr>"; res.players.forEach(p => { var tot = res.finalTotals[p]; var color = tot > 0 ? "#ff5252" : (tot < 0 ? "#81c784" : "#ccc"); html += `<td style='font-weight:bold; font-size:16px; color:${color};'>${sign}${tot}</td>`; }); html += "</tr></tbody></table><h4 style='color:#81d4fa;'>⛳ 逐洞戰況明細</h4><table class='dyn-table'><thead><tr><th style='width:10%;'>洞</th><th style='width:22%; font-size:11px;'>單洞排序</th><th style='width:28%; font-size:11px;'>對戰組合</th><th style='width:20%; font-size:12px;'>得分</th><th style='width:20%; font-size:11px;'>下洞順序</th></tr></thead><tbody>"; res.history.forEach(h => { var pts1 = h.ptsT1 > 0 ? "+"+h.ptsT1 : h.ptsT1; var pts2 = h.ptsT2 > 0 ? "+"+h.ptsT2 : h.ptsT2; var ptsHtml = `<span style='color:${h.ptsT1>0?"#ff5252":"#81c784"}'>T1: ${pts1}</span><br><span style='color:${h.ptsT2>0?"#ff5252":"#81c784"}'>T2: ${pts2}</span>`; html += `<tr><td>${h.hole}</td><td style='font-size:11px; color:#aaa;'>${h.rank.join("<br>↓<br>")}</td><td style='font-size:12px; font-weight:bold;'><span style='color:#ffb74d'>${h.team1.join(" & ")}</span><br>vs<br><span style='color:#81d4fa'>${h.team2.join(" & ")}</span></td><td style='font-size:12px; font-weight:bold;'>${ptsHtml}</td><td style='font-size:11px; color:#81c784;'>${h.nextRank.join("<br>↓<br>")}</td></tr>`; }); html += "</tbody></table>"; document.getElementById("dynGameContent").innerHTML = html; document.getElementById("dynGameModal").style.display = "block"; } }
 
         async function loadSetupData() {
             const res = await apiCall("getSetupData", { pin: currentPin }, false, "載入設定..."); if (!res) return;
@@ -442,102 +471,59 @@
         // ==========================
         // 🏆 總幹事球隊聯賽專區
         // ==========================
-        async function createTournament() { let course = document.getElementById('tourneyCourseSelect').value; let count = document.getElementById('tourneyGroupCount').value; let hdcpMode = document.getElementById('tourneyHdcpMode').value; if(!course) return alert("請選擇球場"); const res = await apiCall("createTournament", { courseName: course, groupCount: count, hdcpMode: hdcpMode }, true, "產生賽事中..."); if (res) { localStorage.setItem("sg_super_admin", "true"); currentTourneyId = res.tourneyId; let html = ""; res.pins.forEach((pin, i) => { localStorage.setItem("isCreator_" + pin, "true"); localStorage.setItem("current_tourney_" + pin, res.tourneyId); let link = window.location.origin + window.location.pathname + "?room=" + pin; html += `<div style="margin-bottom:10px;"><strong style="color:#ce93d8;">第 ${i+1} 組：</strong> <span style="font-size:20px; color:#fff;">${pin}</span> <br><a href="${link}" target="_blank" style="color:#81d4fa; font-size:12px;">進入記分</a></div>`; }); document.getElementById('tourneyPinsArea').innerHTML = html; document.getElementById('tourneyDashboardUrl').value = window.location.origin + window.location.pathname + "?tourney=" + res.tourneyId; navTo('page-tourney-result'); } }
+        async function createTournament() { let course = document.getElementById('tourneyCourseSelect').value; let count = document.getElementById('tourneyGroupCount').value; let hdcpMode = document.getElementById('tourneyHdcpMode').value; if(!course) return alert("請選擇球場"); const res = await apiCall("createTournament", { courseName: course, groupCount: count, hdcpMode: hdcpMode }, true, "產生賽事中..."); if (res) { localStorage.setItem("sg_super_admin", "true"); currentTourneyId = res.tourneyId; let html = ""; res.pins.forEach((pin, i) => { localStorage.setItem("isCreator_" + pin, "true"); localStorage.setItem("current_tourney_" + pin, res.tourneyId); let link = window.location.origin + window.location.pathname + "?room=" + pin; html += `<div style="margin-bottom:10px;"><strong style="color:#ce93d8;">第 ${i+1} 組：</strong> <span style="font-size:20px; color:#fff;">${pin}</span> <br><a href="${link}" target="_blank" style="color:#81d4fa; font-size:12px;">進入記分</a></div>`; }); document.getElementById('displayTeamCode').textContent = res.tourneyId; document.getElementById('tourneyPinsArea').innerHTML = html; document.getElementById('tourneyDashboardUrl').value = window.location.origin + window.location.pathname + "?liveboard=" + res.tourneyId; navTo('page-tourney-result'); } }
         function copyTourneyInfo() { let text = "🏆 球隊賽事開局完成！\n\n即時排行榜網址：\n" + document.getElementById('tourneyDashboardUrl').value + "\n\n各組 PIN 碼 (請至 scoregenie.app 輸入)：\n"; document.getElementById('tourneyPinsArea').querySelectorAll('strong').forEach((el, i) => { text += el.innerText + " " + el.nextElementSibling.innerText + "\n"; }); navigator.clipboard.writeText(text).then(() => alert("已複製！可以直接貼到 LINE")); }
+
+        function goToTourneyAdmin(tid) { currentTourneyId = tid; navTo('page-tourney-admin'); document.getElementById('hubTeamCode').textContent = tid; }
 
         async function goToBatchSetup() {
             navTo('page-tourney-batch'); const res = await apiCall("getTournamentDashboard", { tourneyId: currentTourneyId }, true, "讀取房間..."); if(!res) return;
             let html = "";
             res.pins.forEach((pin, gIdx) => {
-                let pNames = ["", "", "", ""]; let roomData = res.players.filter(p => p.pin === pin); for(let i=0; i<4; i++) { if(roomData[i]) pNames[i] = roomData[i].name; }
-                let hdcps = res.roomDetails[pin].gameHandicaps;
-                html += `<div style="background:#2c2c2c; padding:15px; border-radius:8px; margin-bottom:15px;">
-                            <h4 style="margin:0 0 10px 0; color:#ce93d8; text-align:left;">第 ${gIdx+1} 組 (PIN: ${pin})</h4>
-                            <div style="display:flex; gap:5px; margin-bottom:10px;">
-                                <input type="text" id="b_${pin}_0" value="${pNames[0]}" placeholder="P1 姓名" style="margin:0; padding:8px;" oninput="updateBatchLabels('${pin}')">
-                                <input type="text" id="b_${pin}_1" value="${pNames[1]}" placeholder="P2 姓名" style="margin:0; padding:8px;" oninput="updateBatchLabels('${pin}')">
-                            </div>
-                            <div style="display:flex; gap:5px; margin-bottom:15px;">
-                                <input type="text" id="b_${pin}_2" value="${pNames[2]}" placeholder="P3 姓名" style="margin:0; padding:8px;" oninput="updateBatchLabels('${pin}')">
-                                <input type="text" id="b_${pin}_3" value="${pNames[3]}" placeholder="P4 姓名" style="margin:0; padding:8px;" oninput="updateBatchLabels('${pin}')">
-                            </div>
-                            <h5 style="margin:0 0 5px 0; color:#ffcc80; text-align:left;">對戰讓桿</h5>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px;">`;
-                for(let h=0; h<6; h++) { html += `<div style="background:#1e1e1e; padding:5px; border-radius:5px;"><div id="lbl_${pin}_${h}" class="batch-lbl" data-pin="${pin}" data-idx="${h}" style="font-size:11px; color:#81d4fa; margin-bottom:3px; height:14px; overflow:hidden;"></div><input type="number" id="h_${pin}_${h}" value="${hdcps[h] || 0}" step="0.5" style="margin:0; padding:5px; font-size:14px; width:100%;"></div>`; }
-                html += `</div></div>`;
+                let pNames = ["", "", "", ""]; let roomData = res.players.filter(p => p.pin === pin); for(let i=0; i<4; i++) { if(roomData[i]) pNames[i] = roomData[i].name; } let hdcps = res.roomDetails[pin].gameHandicaps;
+                html += `<div style="background:#2c2c2c; padding:15px; border-radius:8px; margin-bottom:15px;"><h4 style="margin:0 0 10px 0; color:#ce93d8; text-align:left;">第 ${gIdx+1} 組 (PIN: ${pin})</h4><div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" id="b_${pin}_0" value="${pNames[0]}" placeholder="P1 姓名" style="margin:0; padding:8px;" oninput="updateBatchLabels('${pin}')"><input type="text" id="b_${pin}_1" value="${pNames[1]}" placeholder="P2 姓名" style="margin:0; padding:8px;" oninput="updateBatchLabels('${pin}')"></div><div style="display:flex; gap:5px; margin-bottom:15px;"><input type="text" id="b_${pin}_2" value="${pNames[2]}" placeholder="P3 姓名" style="margin:0; padding:8px;" oninput="updateBatchLabels('${pin}')"><input type="text" id="b_${pin}_3" value="${pNames[3]}" placeholder="P4 姓名" style="margin:0; padding:8px;" oninput="updateBatchLabels('${pin}')"></div><h5 style="margin:0 0 5px 0; color:#ffcc80; text-align:left;">對戰讓桿</h5><div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px;">`;
+                for(let h=0; h<6; h++) { html += `<div style="background:#1e1e1e; padding:5px; border-radius:5px;"><div id="lbl_${pin}_${h}" class="batch-lbl" data-pin="${pin}" data-idx="${h}" style="font-size:11px; color:#81d4fa; margin-bottom:3px; height:14px; overflow:hidden;"></div><input type="number" id="h_${pin}_${h}" value="${hdcps[h] || 0}" step="0.5" style="margin:0; padding:5px; font-size:14px; width:100%;"></div>`; } html += `</div></div>`;
             });
-            document.getElementById('batchInputArea').innerHTML = html;
-            res.pins.forEach(pin => updateBatchLabels(pin));
+            document.getElementById('batchInputArea').innerHTML = html; res.pins.forEach(pin => updateBatchLabels(pin));
             if (localStorage.getItem("sg_super_admin") === "true") document.getElementById('batchAutoFillBtn').style.display = 'inline-block';
         }
+        function updateBatchLabels(pin) { let p0 = document.getElementById(`b_${pin}_0`).value || "P1"; let p1 = document.getElementById(`b_${pin}_1`).value || "P2"; let p2 = document.getElementById(`b_${pin}_2`).value || "P3"; let p3 = document.getElementById(`b_${pin}_3`).value || "P4"; document.getElementById(`lbl_${pin}_0`).textContent = `${p0}-${p1}`; document.getElementById(`lbl_${pin}_1`).textContent = `${p0}-${p2}`; document.getElementById(`lbl_${pin}_2`).textContent = `${p0}-${p3}`; document.getElementById(`lbl_${pin}_3`).textContent = `${p1}-${p2}`; document.getElementById(`lbl_${pin}_4`).textContent = `${p1}-${p3}`; document.getElementById(`lbl_${pin}_5`).textContent = `${p2}-${p3}`; }
+        async function batchAutoFillHandicaps() { var btn = document.getElementById("batchAutoFillBtn"); var orig = btn.textContent; btn.disabled = true; btn.textContent = "🪄 查詢中..."; var matchups = []; var labelElements = document.querySelectorAll(".batch-lbl"); labelElements.forEach(lbl => matchups.push(lbl.textContent)); const res = await apiCall("fetchExternalHandicaps", { matchups: matchups }, false, "抓取資料..."); if (res && res.handicaps) { var fillCount = 0; labelElements.forEach((lbl, i) => { let pin = lbl.dataset.pin; let idx = lbl.dataset.idx; if (res.handicaps[i] !== "" && res.handicaps[i] !== null) { document.getElementById(`h_${pin}_${idx}`).value = res.handicaps[i]; fillCount++; } }); if (fillCount === 0) alert("找不到對應的讓桿資料！"); } btn.disabled = false; btn.textContent = orig; }
+        async function saveBatchSetup() { let resDashboard = await apiCall("getTournamentDashboard", { tourneyId: currentTourneyId }, true, "處理中..."); if(!resDashboard) return; let groups = []; resDashboard.pins.forEach(pin => { let p = [ document.getElementById(`b_${pin}_0`).value, document.getElementById(`b_${pin}_1`).value, document.getElementById(`b_${pin}_2`).value, document.getElementById(`b_${pin}_3`).value ]; let h = [ document.getElementById(`h_${pin}_0`).value, document.getElementById(`h_${pin}_1`).value, document.getElementById(`h_${pin}_2`).value, document.getElementById(`h_${pin}_3`).value, document.getElementById(`h_${pin}_4`).value, document.getElementById(`h_${pin}_5`).value ]; groups.push({ pin: pin, players: p, handicaps: h }); }); const res = await apiCall("batchSaveTourneyPlayers", { tourneyId: currentTourneyId, groups: groups }, true, "寫入中..."); if (res) { alert(res.message); goToTourneyAdmin(currentTourneyId); } }
 
-        function updateBatchLabels(pin) {
-            let p0 = document.getElementById(`b_${pin}_0`).value || "P1"; let p1 = document.getElementById(`b_${pin}_1`).value || "P2"; let p2 = document.getElementById(`b_${pin}_2`).value || "P3"; let p3 = document.getElementById(`b_${pin}_3`).value || "P4";
-            document.getElementById(`lbl_${pin}_0`).textContent = `${p0}-${p1}`; document.getElementById(`lbl_${pin}_1`).textContent = `${p0}-${p2}`; document.getElementById(`lbl_${pin}_2`).textContent = `${p0}-${p3}`; document.getElementById(`lbl_${pin}_3`).textContent = `${p1}-${p2}`; document.getElementById(`lbl_${pin}_4`).textContent = `${p1}-${p3}`; document.getElementById(`lbl_${pin}_5`).textContent = `${p2}-${p3}`;
-        }
-
-        async function batchAutoFillHandicaps() {
-            var btn = document.getElementById("batchAutoFillBtn"); var orig = btn.textContent; btn.disabled = true; btn.textContent = "🪄 查詢中...";
-            var matchups = []; var labelElements = document.querySelectorAll(".batch-lbl"); labelElements.forEach(lbl => matchups.push(lbl.textContent));
-            const res = await apiCall("fetchExternalHandicaps", { matchups: matchups }, false, "抓取資料...");
-            if (res && res.handicaps) { var fillCount = 0; labelElements.forEach((lbl, i) => { let pin = lbl.dataset.pin; let idx = lbl.dataset.idx; if (res.handicaps[i] !== "" && res.handicaps[i] !== null) { document.getElementById(`h_${pin}_${idx}`).value = res.handicaps[i]; fillCount++; } }); if (fillCount === 0) alert("找不到對應的讓桿資料！"); }
-            btn.disabled = false; btn.textContent = orig;
-        }
-
-        async function saveBatchSetup() {
-            let resDashboard = await apiCall("getTournamentDashboard", { tourneyId: currentTourneyId }, true, "處理中..."); if(!resDashboard) return;
-            let groups = [];
-            resDashboard.pins.forEach(pin => {
-                let p = [ document.getElementById(`b_${pin}_0`).value, document.getElementById(`b_${pin}_1`).value, document.getElementById(`b_${pin}_2`).value, document.getElementById(`b_${pin}_3`).value ];
-                let h = [ document.getElementById(`h_${pin}_0`).value, document.getElementById(`h_${pin}_1`).value, document.getElementById(`h_${pin}_2`).value, document.getElementById(`h_${pin}_3`).value, document.getElementById(`h_${pin}_4`).value, document.getElementById(`h_${pin}_5`).value ];
-                groups.push({ pin: pin, players: p, handicaps: h });
-            });
-            const res = await apiCall("batchSaveTourneyPlayers", { tourneyId: currentTourneyId, groups: groups }, true, "寫入中...");
-            if (res) { alert(res.message); goToTourneyDashboard(); }
-        }
-
-        function goToTourneyDashboard() { window.location.href = "?tourney=" + currentTourneyId; }
-
-        async function loadTourneyDashboard(tid) {
-            // 💡 3秒防連點防呆
-            var btn = document.getElementById("btnRefreshLeaderboard");
-            if(btn) { btn.disabled = true; setTimeout(()=> { if(btn) btn.disabled = false; }, 3000); }
-
-            currentTourneyId = tid; navTo('page-tourney-dashboard');
-            if (currentPin) document.getElementById('btnBackToMyGame').style.display = 'inline-block'; else document.getElementById('btnBackToMyGame').style.display = 'none';
-            document.querySelector('#pgaLeaderboard tbody').innerHTML = "<tr><td colspan='23'>載入中...</td></tr>";
+        // 💡 全隊 Live Leaderboard (純橫式 PGA 桿數版)
+        async function loadLiveboard(tid) {
+            var btn = document.getElementById("btnLiveRefresh"); if(btn) { btn.disabled = true; setTimeout(()=> { if(btn) btn.disabled = false; }, 3000); }
+            currentTourneyId = tid; navTo('page-liveboard'); 
+            document.querySelector('#livePgaTable tbody').innerHTML = "<tr><td colspan='23'>載入中...</td></tr>";
             const res = await apiCall("getTournamentDashboard", { tourneyId: tid }, false, "更新戰況..."); if (!res) return;
-            document.getElementById('tdCourseName').textContent = "🏟️ " + res.courseName + " | 📅 " + res.date;
-            currentTourneyPars = res.pars || new Array(18).fill(4);
-            currentTourneyData = res.players.map(p => ({ ...p, netScore: p.gross === "未開球" ? 999 : (p.gross - 0), handicap: 0 })); 
-            
-            let sortedPga = [...currentTourneyData].sort((a, b) => { if(a.gross === "未開球") return 1; if(b.gross === "未開球") return -1; return a.toPar - b.toPar; });
+            document.getElementById('liveCourseName').textContent = "🏟️ " + res.courseName;
+            let sortedPga = [...res.players].sort((a, b) => { if(a.gross === "未開球") return 1; if(b.gross === "未開球") return -1; return a.toPar - b.toPar; });
             let html = ""; 
             sortedPga.forEach((p, i) => { 
                 let tpStr = p.gross === "未開球" ? "-" : (p.toPar > 0 ? "+"+p.toPar : (p.toPar === 0 ? "E" : p.toPar)); let tpColor = p.toPar > 0 ? "#ff8a80" : (p.toPar < 0 ? "#81c784" : "#fff");
-                let rowHtml = `<tr><td style="font-weight:bold; color:#ffd700;">${i+1}</td><td style="font-weight:bold; text-align:left;">${p.name}</td><td style="font-weight:bold; color:${tpColor};">${tpStr}</td><td style="color:#aaa;">${p.holesPlayed > 0 ? (p.holesPlayed===18?"F":p.holesPlayed) : "-"}</td><td style="font-weight:bold;">${p.gross}</td>`;
+                // 💡 在這裡套用英文旋轉 90 度的巧思
+                let rowHtml = `<tr><td style="font-weight:bold; color:#ffd700;">${i+1}</td><td style="font-weight:bold; text-align:center;">${formatNameForDisplay(p.name)}</td><td style="font-weight:bold; color:${tpColor};">${tpStr}</td><td style="color:#aaa;">${p.holesPlayed > 0 ? (p.holesPlayed===18?"F":p.holesPlayed) : "-"}</td><td style="font-weight:bold;">${p.gross}</td>`;
                 for(let h=0; h<18; h++) { let diff = p.holeDiffs ? p.holeDiffs[h] : null; if(diff === null) { rowHtml += `<td></td>`; } else { let spanClass = "score-box "; if (diff <= -2) spanClass += "shape-eagle"; else if (diff === -1) spanClass += "shape-birdie"; else if (diff === 0) spanClass += "shape-par"; else if (diff === 1) spanClass += "shape-bogey"; else spanClass += "shape-double"; let disp = diff > 0 ? "+"+diff : (diff===0 ? "E" : diff); rowHtml += `<td><span class="${spanClass}" style="font-size:11px; width:20px; height:20px;">${disp}</span></td>`; } }
                 rowHtml += `</tr>`; html += rowHtml;
-            }); document.querySelector('#pgaLeaderboard tbody').innerHTML = html;
+            }); document.querySelector('#livePgaTable tbody').innerHTML = html;
         }
 
-        function unlockTourneyAdmin() { 
-            let pin = prompt("請輸入總幹事密碼："); 
-            if (pin && isAdminAuth(pin)) { localStorage.setItem("sg_super_admin", "true"); navTo('page-tourney-admin'); renderTourneyAdminBoard(); } 
-            else if (pin !== null) { alert("密碼錯誤，拒絕存取。"); } 
-        }
         function renderTourneyAdminBoard() {
-            let html = ""; 
-            currentTourneyData.sort((a, b) => a.netScore - b.netScore).forEach((p, i) => { html += `<tr><td style="font-weight:bold; color:#ffd700;">${i+1}</td><td style="font-weight:bold; text-align:left;">${p.name}</td><td style="color:#aaa;">${p.gross}</td><td><input type="number" class="net-input" value="${p.handicap}" onchange="updateHandicap('${p.name}', this.value)"></td><td style="color:#81c784; font-weight:bold; font-size:16px;">${p.gross === "未開球" ? "-" : p.netScore}</td></tr>`; });
+            document.getElementById('adminLeaderboardArea').style.display = 'block';
+            let html = ""; currentTourneyData.sort((a, b) => a.netScore - b.netScore).forEach((p, i) => { html += `<tr><td style="font-weight:bold; color:#ffd700;">${i+1}</td><td style="font-weight:bold; text-align:left;">${p.name}</td><td style="color:#aaa;">${p.gross}</td><td><input type="number" class="net-input" value="${p.handicap}" onchange="updateHandicap('${p.name}', this.value)"></td><td style="color:#81c784; font-weight:bold; font-size:16px;">${p.gross === "未開球" ? "-" : p.netScore}</td></tr>`; });
             document.querySelector('#adminLeaderboard tbody').innerHTML = html;
         }
         function updateHandicap(name, val) { let h = parseFloat(val) || 0; let idx = currentTourneyData.findIndex(p => p.name === name); if(idx !== -1) { currentTourneyData[idx].handicap = h; if (currentTourneyData[idx].gross !== "未開球") currentTourneyData[idx].netScore = (currentTourneyData[idx].gross - h).toFixed(1); } }
         function sortTourneyLeaderboard() { currentTourneyData.sort((a, b) => a.netScore - b.netScore); renderTourneyAdminBoard(); }
 
         function drawPeoriaHoles() { let holes = []; while(holes.length < 6) { let r = Math.floor(Math.random() * 18) + 1; if(holes.indexOf(r) === -1) holes.push(r); } document.getElementById('peoriaHoles').value = holes.sort((a,b) => a-b).join(', '); }
-        function calcNewNewPeoria() {
+        async function calcNewNewPeoria() {
             let val = document.getElementById('peoriaHoles').value; let hiddenHoles = val.split(/[,，\s]+/).map(Number).filter(n => n >= 1 && n <= 18);
-            if(hiddenHoles.length !== 6) return alert("請正確輸入 6 個 1~18 的隱藏洞號！"); let totalPar = currentTourneyPars.reduce((a,b)=>a+b, 0) || 72;
+            if(hiddenHoles.length !== 6) return alert("請正確輸入 6 個 1~18 的隱藏洞號！"); 
+            const res = await apiCall("getTournamentDashboard", { tourneyId: currentTourneyId }, true, "讀取最新成績..."); if (!res) return;
+            currentTourneyPars = res.pars || new Array(18).fill(4); currentTourneyData = res.players.map(p => ({ ...p, netScore: p.gross === "未開球" ? 999 : (p.gross - 0), handicap: 0 })); 
+            let totalPar = currentTourneyPars.reduce((a,b)=>a+b, 0) || 72;
             currentTourneyData.forEach(p => {
                 if (p.gross === "未開球" || !p.scores || p.scores.length < 18) { p.handicap = 0; return; } let sum12 = 0;
                 for (let i = 0; i < 18; i++) { let holeNum = i + 1; if (!hiddenHoles.includes(holeNum)) { let cPar = parseInt(currentTourneyPars[i]) || 4; let maxScore = cPar * 2; let holeScore = parseInt(p.scores[i]) || maxScore; if (holeScore > maxScore) holeScore = maxScore; sum12 += holeScore; } }
@@ -546,21 +532,19 @@
         }
 
         async function adminDeleteTourney() { if(!confirm("⚠️ 警告：這將徹底刪除此賽事以及底下所有分組的成績！\n確定要刪除嗎？")) return; const res = await apiCall("deleteTournament", { tourneyId: currentTourneyId }, true, "刪除中..."); if(res) { alert(res.message); window.location.href = '?'; } }
-        async function adminArchiveTourney() { if(!confirm("📦 確定要將此賽事與所有分組封存保留嗎？")) return; const res = await apiCall("archiveTournament", { tourneyId: currentTourneyId }, true, "封存中..."); if(res) { alert(res.message); window.location.href = '?'; } }
-
-        async function generateTeamReport() {
-            if(!confirm("即將產生全隊報告！這會自動結算並封存所有房間。\n確定全隊都已經打完並確認過成績了嗎？")) return;
-            const res = await apiCall("generateTeamReport", { tourneyId: currentTourneyId, finalLeaderboard: currentTourneyData }, true, "產生全隊戰報...");
-            if(res && res.reportId) { window.location.href = "?treport=" + res.reportId; }
-        }
+        async function generateTeamReport() { if(!confirm("即將產生全隊報告！這會自動結算並封存所有房間。\n確定全隊都已經打完並確認過成績了嗎？")) return; const res = await apiCall("generateTeamReport", { tourneyId: currentTourneyId, finalLeaderboard: currentTourneyData }, true, "產生全隊戰報..."); if(res && res.reportId) { window.location.href = "?treport=" + res.reportId; } }
 
         async function loadTeamReport(reportId) {
             navTo('page-team-report'); const res = await apiCall("getTeamReportData", { reportId: reportId }, true, "載入全隊報告..."); if(!res) return;
             document.getElementById('trCourseDate').textContent = "🏟️ " + res.courseName + " ｜ 📅 " + new Date(res.date).toLocaleDateString();
             let finalData = res.finalLeaderboard || []; let grossSorted = [...finalData].sort((a,b) => a.gross - b.gross); let netSorted = [...finalData].sort((a,b) => a.netScore - b.netScore);
-            let html = ""; netSorted.forEach((p, i) => { let grossRank = grossSorted.findIndex(x => x.name === p.name) + 1; html += `<tr><td style="font-weight:bold; color:#81c784; font-size:16px;">${i+1}</td><td style="font-weight:bold; color:#ffd700;">${grossRank}</td><td style="font-weight:bold;">${p.name}</td><td>${p.gross}</td><td>${p.handicap}</td><td style="color:#81c784; font-weight:bold;">${p.netScore}</td></tr>`; });
-            document.querySelector('#trFinalBoard tbody').innerHTML = html;
-            let linksHtml = ""; if(res.groupReports) { res.groupReports.forEach((g, i) => { let url = window.location.origin + window.location.pathname + "?report=" + g.reportId; linksHtml += `<div style="background:#252525; padding:10px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;"><span style="color:#ce93d8; font-weight:bold;">第 ${i+1} 組 (${g.pin})</span><a href="${url}" target="_blank" style="background:#0277bd; color:white; padding:5px 15px; text-decoration:none; border-radius:5px; font-size:12px;">查看戰報</a></div>`; }); } document.getElementById('trGroupLinks').innerHTML = linksHtml;
+            let html = ""; netSorted.forEach((p, i) => { let grossRank = grossSorted.findIndex(x => x.name === p.name) + 1; html += `<tr><td style="font-weight:bold; color:#81c784; font-size:16px;">${i+1}</td><td style="font-weight:bold; color:#ffd700;">${grossRank}</td><td style="font-weight:bold;">${p.name}</td><td>${p.gross}</td><td>${p.handicap}</td><td style="color:#81c784; font-weight:bold;">${p.netScore}</td></tr>`; }); document.querySelector('#trFinalBoard tbody').innerHTML = html;
+            let linksHtml = ""; if(res.groupReports) { res.groupReports.forEach((g, i) => { let url = window.location.origin + window.location.pathname + "?report=" + g.reportId; linksHtml += `<div style="background:#252525; padding:10px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;"><span style="color:#ce93d8; font-weight:bold;">第 ${i+1} 組 (${g.pin})</span><a href="${url}" target="_blank" style="background:#0277bd; color:white; padding:5px 15px; text-decoration:none; border-radius:5px; font-size:12px;">查看單組戰報</a></div>`; }); } document.getElementById('trGroupLinks').innerHTML = linksHtml;
+        }
+
+        // 💡 新增：複製全隊戰報連結
+        function shareTeamReportLink() {
+            let url = window.location.href; try { navigator.clipboard.writeText(url); alert("🎉 終極全隊戰報已準備好！\n網址已複製，請直接貼到 LINE 群組讓大家欣賞：\n\n" + url); } catch(e) { prompt("🎉 終極全隊戰報已準備好！請複製以下網址分享：", url); }
         }
 
         async function generateShareLink() { var btn = document.getElementById("btnGenLink"); var orig = btn.textContent; btn.textContent = "正在護貝中..."; btn.disabled = true; const res = await apiCall("createPermanentReport", { pin: currentPin }, false, "產生戰報..."); btn.textContent = orig; btn.disabled = false; if (res && res.permId) { let url = window.location.origin + window.location.pathname + "?report=" + res.permId; try { await navigator.clipboard.writeText(url); alert("🎉 專屬戰報已產生！\n網址已複製，請直接到 LINE 貼上即可：\n\n" + url); } catch(e) { prompt("🎉 專屬戰報已產生！請複製以下網址分享到群組：", url); } } }
