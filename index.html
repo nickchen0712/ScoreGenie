@@ -88,7 +88,7 @@
         
         .rotate-eng { writing-mode: vertical-rl; transform: rotate(180deg); display: inline-block; white-space: nowrap; margin: auto; padding: 2px 0; }
 
-        /* 底部導覽列 */
+        /* 底部導覽列 (Bottom Navigation Bar) */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: none; justify-content: space-around; align-items: center; padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px); border-top: 1px solid #333; z-index: 9999; }
         .bottom-nav button { background: transparent; border: none; color: #777; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; padding: 0; box-shadow: none; margin: 0; transition: color 0.3s; }
         .bottom-nav button.active { color: #ffd700; }
@@ -129,7 +129,7 @@
             <p>高爾夫最強記分與對戰精靈</p>
             <button onclick="createSingleRoom()" class="btn-purple">✨ 建立單局記分</button>
             <button onclick="navTo('page-tourney-setup')" class="btn-gold">🏆 建立球隊聯賽 (總幹事)</button>
-            <div style="margin: 20px 0; border-top: 1px solid #444; position: relative;"><span style="background: #1e1e1e; padding: 0 10px; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #888; font-size: 14px;">或加入球局 / 管理賽事</span></div>
+            <div style="margin: 20px 0; border-top: 1px solid #444; position: relative;"><span style="background: #1e1e1e; padding: 0 10px; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #888; font-size: 14px;">加入球局 / 管理賽事</span></div>
             <input type="text" id="joinPinInput" placeholder="輸入 球局PIN 或 球隊代碼" style="letter-spacing: 3px; font-size: 20px; font-weight: bold; text-transform: uppercase;">
             <button onclick="joinRoom()" class="btn-green">🤝 進入</button>
         </div>
@@ -180,7 +180,6 @@
             
             <h4 style="text-align:left; color:#81c784; border-bottom:1px solid #444; padding-bottom:5px;">第二步：賽事進行中 (巡視各組)</h4>
             <div id="adminRoomLinksArea" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:15px; justify-content:flex-start;"></div>
-            
             <button onclick="window.open('?liveboard=' + currentTourneyId, '_blank')" class="btn-blue" style="margin-bottom:25px;">📊 開啟全隊即時排行榜 (另開視窗)</button>
 
             <h4 style="text-align:left; color:#ffcc80; border-bottom:1px solid #444; padding-bottom:5px;">第三步：賽後結算</h4>
@@ -403,7 +402,6 @@
             }
         }
 
-        // 💡 優化：切換頁面時同步更新底部導覽列
         function navTo(pageId) { 
             document.querySelectorAll('.page-container').forEach(p => p.classList.remove('active-page')); 
             document.getElementById(pageId).classList.add('active-page'); 
@@ -428,7 +426,6 @@
         function hideLoader() { document.getElementById('loader').style.display = 'none'; }
         function isAdminAuth(pin) { return /^(\d)\1{3}$/.test(pin) || ["1111", "2222", "3333", "4444", "5555", "6666", "7777", "8888", "9999", "0000", "7867"].includes(pin); }
 
-        // 💡 英文名字轉 90 度功能 (純英文/符號/數字組合時觸發)
         function formatNameForDisplay(name) {
             if (/^[A-Za-z0-9\s\.\-_]+$/.test(name.trim()) && name.trim() !== "") { 
                 return `<div class="rotate-eng">${name}</div>`; 
@@ -476,17 +473,12 @@
         }
         
         async function joinRoom(manualPin) {
-            // 💡 確保取得正確的輸入字串
             let pin = typeof manualPin === 'string' ? manualPin : document.getElementById('joinPinInput').value; 
             if(!pin) return;
             
             pin = pin.toUpperCase().trim();
-            // 💡 防呆校正：處理中文鍵盤輸入的全形連字號與空白，轉換成標準半形連字號
-            pin = pin.replace(/[－—–\s]/g, "-").replace(/-+/g, "-");
-            // 💡 防呆校正：如果使用者連連字號都沒打 (例: IWPL2677)，幫他自動補上
-            if (/^[A-Z]{4}\d{4}$/.test(pin)) {
-                pin = pin.substring(0, 4) + "-" + pin.substring(4);
-            }
+            // 💡 防呆極致化：消除所有連字號與空白，只保留英數字 (確保 8 碼對齊)
+            pin = pin.replace(/[－—–\s\-]/g, "");
             
             if (pin === "7867") {
                 localStorage.setItem("sg_super_admin", "true"); 
@@ -657,7 +649,6 @@
                     var tr = thead.insertRow(); 
                     row.forEach((cell, cellIndex) => { 
                         var th = document.createElement("th"); 
-                        // 💡 英文轉向
                         th.innerHTML = cellIndex >= 3 ? formatNameForDisplay(cell) : cell; 
                         if (cellIndex >= 22) th.style.backgroundColor = "#6a1b9a"; 
                         if (cellIndex === 2) { th.style.backgroundColor = "#444"; th.style.color = "#ccc"; th.style.fontSize = "12px"; } 
@@ -669,7 +660,6 @@
                         var extraTr = tbody.insertRow(); 
                         transposed[0].forEach((headerCell, cellIndex) => { 
                             var th = document.createElement("th"); 
-                            // 💡 英文轉向
                             th.innerHTML = cellIndex >= 3 ? formatNameForDisplay(headerCell) : headerCell; 
                             th.style.backgroundColor = "#0277bd"; th.style.color = "white"; 
                             if (cellIndex >= 22) th.style.backgroundColor = "#6a1b9a"; 
@@ -773,7 +763,6 @@
             currentTourneyData = res.players.map(p => ({ ...p, netScore: p.gross === "未開球" ? 999 : (p.gross - 0), handicap: 0 })); 
             renderTourneyAdminBoard();
 
-            // 💡 新增：快速跳轉各組按鈕
             let linksHtml = "";
             res.pins.forEach((pin, idx) => {
                 linksHtml += `<button onclick="joinRoom('${pin}')" style="background:#2c2c2c; border:1px solid #81c784; color:#81c784; padding:8px 12px; border-radius:6px; font-size:14px; cursor:pointer; width:auto; box-shadow:none; margin:0;">第 ${idx+1} 組 (${pin})</button>`;
