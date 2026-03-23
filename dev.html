@@ -225,9 +225,7 @@
         <div class="card" style="max-width: 600px; padding: 15px;">
             <button onclick="document.getElementById('linePasteModal').style.display='flex'" class="btn-blue" style="margin-bottom:20px;">📋 從 LINE 貼上接龍名單</button>
             <button id="batchAutoFillBtn" onclick="batchAutoFillHandicaps()" class="btn-purple" style="display:none; font-size:14px; padding:10px; margin-bottom:20px;">🪄 從 2026 表格自動帶入所有讓桿</button>
-            
             <div id="batchInputArea"></div>
-            
             <button onclick="saveBatchSetup()" class="btn-green" style="margin-top:20px;">💾 儲存所有設定</button>
             <button onclick="goToTourneyAdmin(currentTourneyId)" class="btn-gray">🔙 返回總幹事專頁</button>
         </div>
@@ -306,8 +304,6 @@
                     <button type="button" onclick="closeMatch()" class="btn-gray" style="margin-top:10px;">隱藏對戰表</button>
                 </div>
             </div>
-            <hr style="margin: 25px 0;">
-            <button id="btnGenLink" onclick="generateShareLink()" class="btn-gold premium-btn">🔗 產生 Premium 單組戰報</button>
         </div>
     </div>
 
@@ -351,6 +347,10 @@
                 <div style="display:flex; justify-content:space-between; margin-bottom: 20px;">
                     <select id="initRank1" class="dyn-rank-select"></select><select id="initRank2" class="dyn-rank-select"></select><select id="initRank3" class="dyn-rank-select"></select><select id="initRank4" class="dyn-rank-select"></select>
                 </div>
+
+                <h4 style="margin: 10px 0; color: #ffb74d; border-top: 1px dashed #444; padding-top:15px;">4. 進階：實際打洞順序</h4>
+                <p style="font-size:12px; color:#aaa; margin-bottom:10px; text-align:left;">若有「跳洞打」，請依照您的真實開球順序修改數字，系統將依此順序精準計算四人遊戲勝負。(例如將第 3 洞延後打：1,2,4,5...18,3)</p>
+                <input type="text" id="setupHoleOrder" placeholder="1,2,3...18" style="font-size:14px; letter-spacing:1px; background:#222; border:1px solid #555;">
             </div>
             
             <button onclick="saveSetup()" class="btn-green" style="margin-top:20px;">💾 儲存並返回</button>
@@ -392,11 +392,7 @@
     </div>
 
     <script>
-        // =====================================================
-        // 🚀 系統核心設定：API 連線網址 (gasUrl)
-        // =====================================================
         const gasUrl = "https://script.google.com/macros/s/AKfycbwc9NX9ZXOrr9d2QPCLaXkZ-3Qd13v3rAIzXVYiaLYjKmjlQd_q6Oerrup7Q5WjM3zj0Q/exec"; 
-        // =====================================================
         
         let currentPin = ""; 
         let currentTourneyId = ""; 
@@ -707,8 +703,6 @@
             var caption = table.createCaption(); caption.textContent = "🏟️ " + courseInfo; caption.style.fontWeight = "bold"; caption.style.padding = "10px"; caption.style.color = "#81d4fa"; 
             var thead = table.createTHead(), tbody = table.createTBody();
             
-            var totalCols = transposed[0].length;
-
             transposed.forEach((row, rowIndex) => { 
                 var isHoleColumn = (rowIndex >= 1 && rowIndex <= 9) || (rowIndex >= 11 && rowIndex <= 19); var parValue = parseInt(row[1]);
                 if (rowIndex === 0) { 
@@ -819,9 +813,15 @@
             let html = ""; for(let i=0; i<4; i++) html += `<input type="text" id="sp_${i}" value="${res.players[i] || ''}" placeholder="球員 ${i+1} 姓名">`; document.getElementById('setupPlayers').innerHTML = html;
             let hHtml = ""; res.handicaps.forEach(item => { hHtml += `<div style="margin-bottom:10px; text-align:left;"><label class="setup-handicap-label" style="display:block; font-weight:bold; font-size:14px; color:#81d4fa;">${item.name}</label><input type="number" step="0.5" value="${item.val}" data-original-index="${item.index}" class="setup-handicap-input"></div>`; }); document.getElementById('setupHandicaps').innerHTML = hHtml; document.getElementById('dynGameMode').value = res.dynMode || "None";
             let validPlayers = res.players.filter(String); for(let i=1; i<=4; i++) { let sel = document.getElementById('initRank' + i); sel.innerHTML = ""; validPlayers.forEach(p => { sel.innerHTML += `<option value="${p}">${p}</option>`; }); if(res.initRank && res.initRank[i-1] && validPlayers.includes(res.initRank[i-1])) sel.value = res.initRank[i-1]; else if(validPlayers[i-1]) sel.value = validPlayers[i-1]; }
+            
+            // 💡 讀取並填入 customHoleOrderStr
+            if (document.getElementById('setupHoleOrder')) {
+                document.getElementById('setupHoleOrder').value = res.customHoleOrderStr || "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18";
+            }
         }
 
         async function refreshSetupMatchups() { let players = []; for(let i=0; i<4; i++) players.push(document.getElementById(`sp_${i}`).value); let initRanks = [ document.getElementById('initRank1').value, document.getElementById('initRank2').value, document.getElementById('initRank3').value, document.getElementById('initRank4').value ]; const res = await apiCall("saveSetupData", { pin: currentPin, players: players, handicaps: [], dynMode: "None", initRank: initRanks }, false, "更新組合..."); if (res) loadSetupData(); }
+        async function autoFillHandicaps() { var btn = document.getElementById("adminAutoFillBtn"); var orig = btn.textContent; btn.disabled = true; btn.textContent = "🪄 查詢中..."; var matchups = []; document.querySelectorAll(".setup-handicap-label").forEach(lbl => matchups.push(lbl.textContent)); const res = await apiCall("fetchExternalHandicaps", { matchups: matchups }, false, "抓取資料..."); if (res && res.handicaps) { var inputs = document.querySelectorAll(".setup-handicap-input"); var fillCount = 0; inputs.forEach((input, i) => { if (res.handicaps[i] !== "" && res.handicaps[i] !== null) { input.value = res.handicaps[i]; fillCount++; } }); if (fillCount === 0) alert("找不到對應的讓桿資料！"); } btn.disabled = false; btn.textContent = orig; }
         async function applyCourse() { let course = document.getElementById('setupCourseSelect').value; let tee = document.getElementById('setupTeeOff').value; let hdcpMode = document.getElementById('setupHdcpMode').value; if(!course && document.getElementById('setupCourseSelect').disabled === false) return alert("請選擇球場"); const res = await apiCall("applyCourseData", { pin: currentPin, courseName: course, teeOff: tee, hdcpMode: hdcpMode, manualPars:[], manualStdHdcp:[] }, false, "套用球場..."); if (res) { alert(res.message); document.getElementById('holeSelect').value = (tee === "IN") ? "10" : "1"; } }
         
         async function saveSetup() { 
@@ -831,13 +831,16 @@
             let hdcpObjects = []; 
             let dynMode = "None";
             let initRanks = [ document.getElementById('initRank1').value, document.getElementById('initRank2').value, document.getElementById('initRank3').value, document.getElementById('initRank4').value ]; 
+            let holeOrderStr = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18";
             
             if (document.getElementById('premiumSettingsArea').style.display !== 'none') {
                 document.querySelectorAll(".setup-handicap-input").forEach(input => { hdcpObjects.push({ index: parseInt(input.dataset.originalIndex), val: input.value }); }); 
                 dynMode = document.getElementById('dynGameMode').value; 
+                // 💡 抓取 customHoleOrderStr
+                if(document.getElementById('setupHoleOrder')) holeOrderStr = document.getElementById('setupHoleOrder').value;
             }
 
-            const res = await apiCall("saveSetupData", { pin: currentPin, players: players, handicaps: hdcpObjects, dynMode: dynMode, initRank: initRanks }, false, "儲存設定..."); 
+            const res = await apiCall("saveSetupData", { pin: currentPin, players: players, handicaps: hdcpObjects, dynMode: dynMode, initRank: initRanks, customHoleOrderStr: holeOrderStr }, false, "儲存設定..."); 
             if (res) { alert("儲存成功！"); navTo('page-main'); refreshMainBoard(); } 
         }
 
@@ -863,13 +866,28 @@
             if (res) { 
                 localStorage.setItem("sg_super_admin", "true"); 
                 currentTourneyId = res.tourneyId; 
-                res.pins.forEach((pin) => { 
+                let html = ""; 
+                let baseUrl = window.location.origin + window.location.pathname;
+                res.pins.forEach((pin, i) => { 
                     localStorage.setItem("isCreator_" + pin, "true"); 
                     localStorage.setItem("current_tourney_" + pin, res.tourneyId); 
+                    let link = baseUrl + "?room=" + pin + "&openExternalBrowser=1"; 
+                    html += `<div style="margin-bottom:10px;"><strong style="color:#ce93d8;">第 ${i+1} 組：</strong> <span style="font-size:20px; color:#fff;">${pin}</span> <br><a href="${link}" target="_blank" style="color:#81d4fa; font-size:12px;">進入記分</a></div>`; 
                 }); 
-                alert("🏆 賽事建立成功！已為您跳轉至總幹事大廳。");
-                goToTourneyAdmin(res.tourneyId); 
+                document.getElementById('displayTeamCode').textContent = res.tourneyId; 
+                document.getElementById('tourneyPinsArea').innerHTML = html; 
+                document.getElementById('tourneyDashboardUrl').value = baseUrl + "?liveboard=" + res.tourneyId + "&openExternalBrowser=1"; 
+                navTo('page-tourney-result'); 
             } 
+        }
+
+        function copyTourneyInfo() { 
+            let text = "🏆 球隊賽事開局完成！\n\n🎯 總幹事管理代碼：" + currentTourneyId + "\n\n📊 即時排行榜網址：\n" + document.getElementById('tourneyDashboardUrl').value + "\n\n⛳ 各組記分 PIN 碼 (請點擊『進入』輸入)：\n"; 
+            document.getElementById('tourneyPinsArea').querySelectorAll('strong').forEach((el, i) => { 
+                text += el.innerText + " " + el.nextElementSibling.innerText + "\n"; 
+            }); 
+            text += "\n(💡 點擊網址會自動跳轉至外部瀏覽器，不怕關掉 LINE 視窗喔！)";
+            navigator.clipboard.writeText(text).then(() => alert("已複製！可以直接貼到 LINE")); 
         }
 
         async function goToTourneyAdmin(tid) { 
@@ -920,7 +938,6 @@
                 let hdcps = res.roomDetails[pin].gameHandicaps;
                 let tOff = res.roomDetails[pin].teeOff || 'OUT';
                 
-                // 💡 計算這組有幾個人 (決定預設 3 或 4 人組)
                 let validCount = pNames.filter(n => n.trim() !== "").length;
                 let initCount = validCount === 3 ? 3 : 4;
 
@@ -958,24 +975,23 @@
             
             res.pins.forEach(pin => {
                 updateBatchLabels(pin);
-                toggleGroupPlayerCount(pin); // 💡 初始化時套用 3或4 人的視圖
+                toggleGroupPlayerCount(pin); 
             });
             
             if (localStorage.getItem("sg_super_admin") === "true") document.getElementById('batchAutoFillBtn').style.display = 'inline-block';
         }
         
-        // 💡 處理 3人/4人 組別的隱藏邏輯
         function toggleGroupPlayerCount(pin) {
             let count = document.getElementById(`pCount_${pin}`).value;
             let p4Input = document.getElementById(`b_${pin}_3`);
             
-            let hwrap2 = document.getElementById(`hwrap_${pin}_2`); // 1-4
-            let hwrap4 = document.getElementById(`hwrap_${pin}_4`); // 2-4
-            let hwrap5 = document.getElementById(`hwrap_${pin}_5`); // 3-4
+            let hwrap2 = document.getElementById(`hwrap_${pin}_2`); 
+            let hwrap4 = document.getElementById(`hwrap_${pin}_4`); 
+            let hwrap5 = document.getElementById(`hwrap_${pin}_5`); 
 
             if (count === "3") {
                 p4Input.style.display = 'none';
-                p4Input.value = ""; // 清空值，防止後端存到
+                p4Input.value = ""; 
                 if(hwrap2) hwrap2.style.display = 'none';
                 if(hwrap4) hwrap4.style.display = 'none';
                 if(hwrap5) hwrap5.style.display = 'none';
@@ -1034,7 +1050,6 @@
             let targetInput = null;
             
             for(let i=0; i<inputs.length; i++) {
-                // 💡 只有格子是「顯示的(不為none)」且「空的」，才會被派位填入
                 if(inputs[i].style.display !== 'none' && inputs[i].value.trim() === "") {
                     targetInput = inputs[i];
                     break;
@@ -1060,7 +1075,7 @@
             resDashboard.pins.forEach(pin => { 
                 let p = [ document.getElementById(`b_${pin}_0`).value, document.getElementById(`b_${pin}_1`).value, document.getElementById(`b_${pin}_2`).value, document.getElementById(`b_${pin}_3`).value ]; 
                 let h = [ document.getElementById(`h_${pin}_0`).value, document.getElementById(`h_${pin}_1`).value, document.getElementById(`h_${pin}_2`).value, document.getElementById(`h_${pin}_3`).value, document.getElementById(`h_${pin}_4`).value, document.getElementById(`h_${pin}_5`).value ]; 
-                let t = document.getElementById(`tee_${pin}`).value; // 💡 獲取開球狀態
+                let t = document.getElementById(`tee_${pin}`).value; 
                 groups.push({ pin: pin, players: p, handicaps: h, teeOff: t }); 
             }); 
             const res = await apiCall("batchSaveTourneyPlayers", { tourneyId: currentTourneyId, groups: groups }, true, "寫入中..."); 
@@ -1109,7 +1124,6 @@
         }
 
         async function adminDeleteTourney() { if(!confirm("⚠️ 警告：這將徹底刪除此賽事以及底下所有分組的成績！\n確定要刪除嗎？")) return; const res = await apiCall("deleteTournament", { tourneyId: currentTourneyId }, true, "刪除中..."); if(res) { alert(res.message); window.location.href = '?'; } }
-        async function adminArchiveTourney() { if(!confirm("📦 確定要將此賽事與所有分組封存保留嗎？")) return; const res = await apiCall("archiveTournament", { tourneyId: currentTourneyId }, true, "封存中..."); if(res) { alert(res.message); window.location.href = '?'; } }
 
         async function generateTeamReport() {
             if(!confirm("即將產生全隊報告！這會自動結算並封存所有房間。\n確定全隊都已經打完並確認過成績了嗎？")) return;
