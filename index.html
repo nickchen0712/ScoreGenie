@@ -395,7 +395,7 @@
         // =====================================================
         // 🚀 系統核心設定：API 連線網址 (gasUrl)
         // =====================================================
-        // 💡 [正式上線版] 務必確認這是您【正式版】GAS 部署的網址！
+        // 💡 務必填入對應的網址 (下方為範例，請確認是您的正式/測試 URL)
         const gasUrl = "https://script.google.com/macros/s/AKfycbymh6lss_alVcp6-hyrQVFq9l6QJY89hq5oMks5DT7HRwmY9WY0nEwCbt7R5-jixhgE/exec"; 
         // =====================================================
         
@@ -708,8 +708,6 @@
             var caption = table.createCaption(); caption.textContent = "🏟️ " + courseInfo; caption.style.fontWeight = "bold"; caption.style.padding = "10px"; caption.style.color = "#81d4fa"; 
             var thead = table.createTHead(), tbody = table.createTBody();
             
-            var totalCols = transposed[0].length;
-
             transposed.forEach((row, rowIndex) => { 
                 var isHoleColumn = (rowIndex >= 1 && rowIndex <= 9) || (rowIndex >= 11 && rowIndex <= 19); var parValue = parseInt(row[1]);
                 if (rowIndex === 0) { 
@@ -748,7 +746,6 @@
                                 var diff = score - parValue; 
                                 var span = document.createElement("span"); span.innerHTML = cell; span.className = "score-box "; 
                                 if (diff <= -2) span.className += "shape-eagle"; else if (diff === -1) span.className += "shape-birdie"; else if (diff === 0) span.className += "shape-par"; else if (diff === 1) span.className += "shape-bogey"; else span.className += "shape-double"; 
-                                cellContent = `<span class="${spanClass}">${cell}</span>`; 
                                 td.appendChild(span); 
                             } else {
                                 td.innerHTML = cell; 
@@ -853,9 +850,7 @@
             if (res) { alert("儲存成功！"); navTo('page-main'); refreshMainBoard(); } 
         }
 
-        // ==========================
-        // 🏆 總幹事球隊聯賽專區
-        // ==========================
+        // 💡 修正版：不再跳去幽靈成功頁面，直接進入總幹事大廳
         async function createTournament() { 
             let course = document.getElementById('tourneyCourseSelect').value; 
             let count = document.getElementById('tourneyGroupCount').value; 
@@ -875,28 +870,13 @@
             if (res) { 
                 localStorage.setItem("sg_super_admin", "true"); 
                 currentTourneyId = res.tourneyId; 
-                let html = ""; 
-                let baseUrl = window.location.origin + window.location.pathname;
-                res.pins.forEach((pin, i) => { 
+                res.pins.forEach((pin) => { 
                     localStorage.setItem("isCreator_" + pin, "true"); 
                     localStorage.setItem("current_tourney_" + pin, res.tourneyId); 
-                    let link = baseUrl + "?room=" + pin + "&openExternalBrowser=1"; 
-                    html += `<div style="margin-bottom:10px;"><strong style="color:#ce93d8;">第 ${i+1} 組：</strong> <span style="font-size:20px; color:#fff;">${pin}</span> <br><a href="${link}" target="_blank" style="color:#81d4fa; font-size:12px;">進入記分</a></div>`; 
                 }); 
-                document.getElementById('displayTeamCode').textContent = res.tourneyId; 
-                document.getElementById('tourneyPinsArea').innerHTML = html; 
-                document.getElementById('tourneyDashboardUrl').value = baseUrl + "?liveboard=" + res.tourneyId + "&openExternalBrowser=1"; 
-                navTo('page-tourney-result'); 
+                alert("🏆 賽事建立成功！已為您跳轉至總幹事大廳。");
+                goToTourneyAdmin(res.tourneyId); 
             } 
-        }
-
-        function copyTourneyInfo() { 
-            let text = "🏆 球隊賽事開局完成！\n\n🎯 總幹事管理代碼：" + currentTourneyId + "\n\n📊 即時排行榜網址：\n" + document.getElementById('tourneyDashboardUrl').value + "\n\n⛳ 各組記分 PIN 碼 (請點擊『進入』輸入)：\n"; 
-            document.getElementById('tourneyPinsArea').querySelectorAll('strong').forEach((el, i) => { 
-                text += el.innerText + " " + el.nextElementSibling.innerText + "\n"; 
-            }); 
-            text += "\n(💡 點擊網址會自動跳轉至外部瀏覽器，不怕關掉 LINE 視窗喔！)";
-            navigator.clipboard.writeText(text).then(() => alert("已複製！可以直接貼到 LINE")); 
         }
 
         async function goToTourneyAdmin(tid) { 
@@ -1133,7 +1113,6 @@
         }
 
         async function adminDeleteTourney() { if(!confirm("⚠️ 警告：這將徹底刪除此賽事以及底下所有分組的成績！\n確定要刪除嗎？")) return; const res = await apiCall("deleteTournament", { tourneyId: currentTourneyId }, true, "刪除中..."); if(res) { alert(res.message); window.location.href = '?'; } }
-        async function adminArchiveTourney() { if(!confirm("📦 確定要將此賽事與所有分組封存保留嗎？")) return; const res = await apiCall("archiveTournament", { tourneyId: currentTourneyId }, true, "封存中..."); if(res) { alert(res.message); window.location.href = '?'; } }
 
         async function generateTeamReport() {
             if(!confirm("即將產生全隊報告！這會自動結算並封存所有房間。\n確定全隊都已經打完並確認過成績了嗎？")) return;
