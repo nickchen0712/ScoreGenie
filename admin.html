@@ -54,16 +54,15 @@
         button:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(255,215,0,0.3); }
         .btn-blue { background: linear-gradient(135deg, #29b6f6, #0277bd); color: white; box-shadow: 0 4px 10px rgba(41,182,246,0.3);}
         
-        input { 
+        input, select { 
             padding: 12px; 
-            font-size: 18px; 
+            font-size: 16px; 
             border-radius: 8px; 
             border: 1px solid #555; 
             background: #333; 
             color: white; 
-            letter-spacing: 2px;
         }
-        input:focus { outline: none; border-color: #ffd700; }
+        input:focus, select:focus { outline: none; border-color: #ffd700; }
         
         #loader { 
             position: fixed; top: 20px; right: 20px; 
@@ -88,7 +87,7 @@
         <div class="card" style="border-color: #ffd700;">
             <h1 style="font-size:32px; margin-bottom:5px;">🕵️‍♂️ 總部印鈔機</h1>
             <p style="color:#aaa; margin-bottom:25px;">ScoreGenie 最高管理員權限核實</p>
-            <input type="password" id="adminPwd" placeholder="輸入金庫密碼" style="width: 100%; box-sizing: border-box; margin-bottom: 20px; text-align:center;" onkeypress="if(event.key === 'Enter') login()">
+            <input type="password" id="adminPwd" placeholder="輸入金庫密碼" style="width: 100%; box-sizing: border-box; margin-bottom: 20px; text-align:center; letter-spacing:3px;" onkeypress="if(event.key === 'Enter') login()">
             <button onclick="login()" style="width: 100%;">🔓 登入系統</button>
         </div>
     </div>
@@ -98,17 +97,29 @@
             <h1 style="margin:0; font-size:36px;">👑 ScoreGenie 營運總部</h1>
             <div style="display: flex; gap: 15px;">
                 <button onclick="loadDashboard()" class="btn-blue">🔄 更新戰情雷達</button>
-                <button onclick="actionGeneratePassCode()">✨ 產生新 Pass Code</button>
             </div>
         </div>
 
         <div class="grid">
             <div class="card">
                 <h3>🎟️ 商業開通碼 (Pass Codes)</h3>
-                <p style="font-size:13px; color:#aaa; margin-bottom:15px;">產生的代碼可發送給總幹事，用於解鎖尊榮版功能。</p>
+                <p style="font-size:13px; color:#aaa; margin-bottom:15px;">請選擇要綁定的對象與使用期限，產生後即可發送給總幹事。</p>
+                
+                <div style="display:flex; gap:10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <select id="passCodeTarget" style="flex: 2; min-width: 150px; margin:0;">
+                        <option value="ALL">通用 (不綁定任何球局)</option>
+                        </select>
+                    <select id="passCodeExpire" style="flex: 1; min-width: 100px; margin:0;">
+                        <option value="24">效期 24 小時</option>
+                        <option value="48">效期 48 小時</option>
+                        <option value="72">效期 72 小時</option>
+                    </select>
+                    <button onclick="actionGeneratePassCode()" class="btn-gold" style="margin:0; flex: 1; min-width: 120px;">✨ 產生開通碼</button>
+                </div>
+
                 <div class="table-container">
                     <table id="codesTable">
-                        <thead><tr><th>開通碼</th><th>狀態</th><th>使用對象</th><th>產生時間</th></tr></thead>
+                        <thead><tr><th>開通碼</th><th>狀態</th><th>綁定對象</th><th>到期時間</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -128,7 +139,7 @@
     </div>
 
     <script>
-        // 💡 這裡是 DEV 測試版的 API 網址，當您要佈署正式版 admin 時，請換成正式版的 gasUrl
+        // 💡 [DEV測試版] 這是您測試用的 API 網址，當您要發布正式版 admin 時，請改為正式網址
         const gasUrl = "https://script.google.com/macros/s/AKfycbwc9NX9ZXOrr9d2QPCLaXkZ-3Qd13v3rAIzXVYiaLYjKmjlQd_q6Oerrup7Q5WjM3zj0Q/exec";
 
         async function apiCall(action, payload = {}) {
@@ -149,7 +160,6 @@
             }
         }
 
-        // 💡 登入防護
         function login() {
             const pwd = document.getElementById('adminPwd').value;
             if(pwd === "7867") { 
@@ -157,43 +167,59 @@
                 document.getElementById('dashboardView').style.display = 'block';
                 loadDashboard();
             } else {
-                alert("密碼錯誤，啟動自毀程序...(開玩笑的，再試一次吧！)");
+                alert("密碼錯誤！");
                 document.getElementById('adminPwd').value = "";
             }
         }
 
-        // 💡 載入儀表板資料
         async function loadDashboard() {
             const res = await apiCall("getSuperAdminDashboard", {});
             if (!res) return;
 
-            // 1. 渲染開通碼表格
-            let cHtml = "";
+            let tourneys = res.tourneys || [];
+            let rooms = res.rooms || [];
             let codes = res.codes || [];
+            let now = new Date().getTime();
+
+            // 1. 產生下拉選單 (只顯示尚未尊榮的球局，方便您選擇)
+            let targetSelect = document.getElementById('passCodeTarget');
+            let optionsHtml = `<option value="ALL">通用 (不綁定任何球局)</option>`;
+            
+            tourneys.sort((a,b) => b.date - a.date).forEach(t => {
+                optionsHtml += `<option value="${t.id}">🏆 賽事: ${t.id} (${t.course})</option>`;
+            });
+            rooms.sort((a,b) => b.timestamp - a.timestamp).forEach(r => {
+                if(r.tourneyId) return;
+                optionsHtml += `<option value="${r.pin}">⛳ 單局: ${r.pin} (${r.course || '未設定'})</option>`;
+            });
+            targetSelect.innerHTML = optionsHtml;
+
+            // 2. 渲染開通碼表格
+            let cHtml = "";
             codes.sort((a,b) => b.createdAt - a.createdAt).forEach(c => {
-                let statusClass = c.status === 'active' ? 'status-active' : 'status-used';
-                let statusText = c.status === 'active' ? '可使用' : '已開通';
-                let dateStr = new Date(c.createdAt).toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute:'2-digit' });
+                let isExpired = c.expireAt && now > c.expireAt && c.status === 'active';
+                let statusClass = c.status === 'active' ? (isExpired ? 'status-used' : 'status-active') : 'status-used';
+                let statusText = c.status === 'active' ? (isExpired ? '已過期' : '可使用') : '已開通';
                 
-                // 讓「可使用」的代碼可以點擊再次複製
-                let codeDisplay = c.status === 'active' 
+                let expireDateStr = c.expireAt ? new Date(c.expireAt).toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute:'2-digit' }) : '-';
+                
+                let codeDisplay = (c.status === 'active' && !isExpired) 
                     ? `<span style="cursor:pointer;" title="點擊複製" onclick="copyToClipboard('${c.code}')">${c.code} 📋</span>` 
                     : c.code;
+
+                let bindTarget = c.assignedTo === "ALL" || !c.assignedTo ? "通用" : c.assignedTo;
 
                 cHtml += `<tr>
                     <td style="font-weight:bold; letter-spacing:2px; color:#ffd700;">${codeDisplay}</td>
                     <td class="${statusClass}">${statusText}</td>
-                    <td style="color:#ce93d8; font-weight:bold;">${c.usedBy || '-'}</td>
-                    <td style="color:#aaa;">${dateStr}</td>
+                    <td style="color:#81d4fa;">${bindTarget}</td>
+                    <td style="color:#aaa; font-size: 13px;">${expireDateStr}</td>
                 </tr>`;
             });
             document.querySelector('#codesTable tbody').innerHTML = cHtml || "<tr><td colspan='4' style='text-align:center;'>目前金庫空空如也，請印鈔！</td></tr>";
 
-            // 2. 渲染雷達監控表格
+            // 3. 渲染雷達監控表格
             let rHtml = "";
-            let tourneys = res.tourneys || [];
-            
-            // 先放賽事
             tourneys.sort((a,b) => b.date - a.date).forEach(t => {
                 rHtml += `<tr>
                     <td style="color:#ffd700; font-weight:bold;">🏆 賽事 (${t.pins.length}組)</td>
@@ -203,8 +229,6 @@
                 </tr>`;
             });
             
-            // 再放單局房間 (隱藏隸屬於賽事的房間)
-            let rooms = res.rooms || [];
             rooms.sort((a,b) => b.timestamp - a.timestamp).forEach(r => {
                 if(r.tourneyId) return; 
                 let prem = r.isPremium ? "✅ 尊榮" : "❌ 一般";
@@ -218,17 +242,20 @@
             document.querySelector('#roomsTable tbody').innerHTML = rHtml || "<tr><td colspan='4' style='text-align:center;'>目前全台沒有人在打球...</td></tr>";
         }
 
-        // 💡 點擊印鈔機按鈕
         async function actionGeneratePassCode() {
-            const res = await apiCall("generatePassCode", {});
+            let targetId = document.getElementById('passCodeTarget').value;
+            let expireHours = document.getElementById('passCodeExpire').value;
+            let targetName = targetId === "ALL" ? "通用" : targetId;
+            
+            if(!confirm(`確定要產生一組新代碼？\n綁定對象：${targetName}\n使用期限：${expireHours} 小時`)) return;
+
+            const res = await apiCall("generatePassCode", { targetId: targetId, expireHours: expireHours });
             if(res && res.code) {
-                // 彈出系統原生的 prompt，方便手機或電腦直接全選複製
                 prompt("🎉 印鈔成功！請複製這組全新的開通碼發送給總幹事：", res.code);
                 loadDashboard(); 
             }
         }
 
-        // 💡 輔助複製功能
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
                 alert("✅ 已複製開通碼：" + text);
