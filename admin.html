@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreGenie | 最高管理員總部</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <style>
+        body { 
+            background-color: #0a0a0a; 
+            color: #fff; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            margin: 0; 
+            padding: 30px; 
+        }
+        .container { max-width: 1200px; margin: auto; }
+        h1, h2, h3 { color: #ce93d8; margin-top: 0; }
+        
+        .card { 
+            background: #1e1e1e; 
+            padding: 25px; 
+            border-radius: 12px; 
+            border: 1px solid #333; 
+            margin-bottom: 20px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5); 
+        }
+        
+        .grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 30px; 
+            align-items: start;
+        }
+        @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 15px; background: #1e1e1e; text-align: left; }
+        th, td { border: 1px solid #444; padding: 12px; }
+        th { background: linear-gradient(135deg, #0277bd, #01579b); color: white; position: sticky; top: 0; }
+        tr:nth-child(even) { background-color: #252525; }
+        tr:hover { background-color: #333; }
+        
+        button { 
+            background: linear-gradient(135deg, #ffd700, #ffb300); 
+            color: #3e2723; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 16px; 
+            transition: transform 0.1s; 
+            box-shadow: 0 4px 10px rgba(255,215,0,0.3);
+        }
+        button:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(255,215,0,0.3); }
+        .btn-blue { background: linear-gradient(135deg, #29b6f6, #0277bd); color: white; box-shadow: 0 4px 10px rgba(41,182,246,0.3);}
+        
+        input { 
+            padding: 12px; 
+            font-size: 18px; 
+            border-radius: 8px; 
+            border: 1px solid #555; 
+            background: #333; 
+            color: white; 
+            letter-spacing: 2px;
+        }
+        input:focus { outline: none; border-color: #ffd700; }
+        
+        #loader { 
+            position: fixed; top: 20px; right: 20px; 
+            background: rgba(30,30,30,0.9); 
+            padding: 10px 20px; border-radius: 20px; 
+            border: 1px solid #ce93d8; color: #ce93d8; 
+            font-weight: bold; z-index: 1000; display: none; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+        
+        .status-active { color: #81c784; font-weight: bold; }
+        .status-used { color: #ff8a80; }
+        
+        .table-container { max-height: 600px; overflow-y: auto; border-radius: 8px; border: 1px solid #444; }
+    </style>
+</head>
+<body>
+
+    <div id="loader">📡 與總部伺服器連線中...</div>
+
+    <div id="loginView" class="container" style="text-align:center; max-width: 400px; margin-top: 15vh;">
+        <div class="card" style="border-color: #ffd700;">
+            <h1 style="font-size:32px; margin-bottom:5px;">🕵️‍♂️ 總部印鈔機</h1>
+            <p style="color:#aaa; margin-bottom:25px;">ScoreGenie 最高管理員權限核實</p>
+            <input type="password" id="adminPwd" placeholder="輸入金庫密碼" style="width: 100%; box-sizing: border-box; margin-bottom: 20px; text-align:center;" onkeypress="if(event.key === 'Enter') login()">
+            <button onclick="login()" style="width: 100%;">🔓 登入系統</button>
+        </div>
+    </div>
+
+    <div id="dashboardView" class="container" style="display:none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px dashed #444; padding-bottom: 15px;">
+            <h1 style="margin:0; font-size:36px;">👑 ScoreGenie 營運總部</h1>
+            <div style="display: flex; gap: 15px;">
+                <button onclick="loadDashboard()" class="btn-blue">🔄 更新戰情雷達</button>
+                <button onclick="actionGeneratePassCode()">✨ 產生新 Pass Code</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>🎟️ 商業開通碼 (Pass Codes)</h3>
+                <p style="font-size:13px; color:#aaa; margin-bottom:15px;">產生的代碼可發送給總幹事，用於解鎖尊榮版功能。</p>
+                <div class="table-container">
+                    <table id="codesTable">
+                        <thead><tr><th>開通碼</th><th>狀態</th><th>使用對象</th><th>產生時間</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📡 雷達監控：活動中球局與賽事</h3>
+                <p style="font-size:13px; color:#aaa; margin-bottom:15px;">即時掌握全站有哪些球隊或散客正在記分。</p>
+                <div class="table-container">
+                    <table id="roomsTable">
+                        <thead><tr><th>類型</th><th>PIN / 賽事</th><th>球場</th><th>尊榮狀態</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 💡 這裡是 DEV 測試版的 API 網址，當您要佈署正式版 admin 時，請換成正式版的 gasUrl
+        const gasUrl = "https://script.google.com/macros/s/AKfycbwc9NX9ZXOrr9d2QPCLaXkZ-3Qd13v3rAIzXVYiaLYjKmjlQd_q6Oerrup7Q5WjM3zj0Q/exec";
+
+        async function apiCall(action, payload = {}) {
+            document.getElementById('loader').style.display = 'block';
+            try {
+                const response = await fetch(gasUrl, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                    body: JSON.stringify({ action: action, payload: payload }) 
+                });
+                const json = await response.json();
+                document.getElementById('loader').style.display = 'none';
+                if (!json.success) { alert("伺服器錯誤：" + json.error); return null; }
+                return json.data;
+            } catch (err) { 
+                document.getElementById('loader').style.display = 'none';
+                alert("連線失敗，請檢查網路狀態！"); return null; 
+            }
+        }
+
+        // 💡 登入防護
+        function login() {
+            const pwd = document.getElementById('adminPwd').value;
+            if(pwd === "7867") { 
+                document.getElementById('loginView').style.display = 'none';
+                document.getElementById('dashboardView').style.display = 'block';
+                loadDashboard();
+            } else {
+                alert("密碼錯誤，啟動自毀程序...(開玩笑的，再試一次吧！)");
+                document.getElementById('adminPwd').value = "";
+            }
+        }
+
+        // 💡 載入儀表板資料
+        async function loadDashboard() {
+            const res = await apiCall("getSuperAdminDashboard", {});
+            if (!res) return;
+
+            // 1. 渲染開通碼表格
+            let cHtml = "";
+            let codes = res.codes || [];
+            codes.sort((a,b) => b.createdAt - a.createdAt).forEach(c => {
+                let statusClass = c.status === 'active' ? 'status-active' : 'status-used';
+                let statusText = c.status === 'active' ? '可使用' : '已開通';
+                let dateStr = new Date(c.createdAt).toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute:'2-digit' });
+                
+                // 讓「可使用」的代碼可以點擊再次複製
+                let codeDisplay = c.status === 'active' 
+                    ? `<span style="cursor:pointer;" title="點擊複製" onclick="copyToClipboard('${c.code}')">${c.code} 📋</span>` 
+                    : c.code;
+
+                cHtml += `<tr>
+                    <td style="font-weight:bold; letter-spacing:2px; color:#ffd700;">${codeDisplay}</td>
+                    <td class="${statusClass}">${statusText}</td>
+                    <td style="color:#ce93d8; font-weight:bold;">${c.usedBy || '-'}</td>
+                    <td style="color:#aaa;">${dateStr}</td>
+                </tr>`;
+            });
+            document.querySelector('#codesTable tbody').innerHTML = cHtml || "<tr><td colspan='4' style='text-align:center;'>目前金庫空空如也，請印鈔！</td></tr>";
+
+            // 2. 渲染雷達監控表格
+            let rHtml = "";
+            let tourneys = res.tourneys || [];
+            
+            // 先放賽事
+            tourneys.sort((a,b) => b.date - a.date).forEach(t => {
+                rHtml += `<tr>
+                    <td style="color:#ffd700; font-weight:bold;">🏆 賽事 (${t.pins.length}組)</td>
+                    <td style="font-weight:bold; color:#ce93d8; letter-spacing:1px;">${t.id}</td>
+                    <td>${t.course}</td>
+                    <td>-</td>
+                </tr>`;
+            });
+            
+            // 再放單局房間 (隱藏隸屬於賽事的房間)
+            let rooms = res.rooms || [];
+            rooms.sort((a,b) => b.timestamp - a.timestamp).forEach(r => {
+                if(r.tourneyId) return; 
+                let prem = r.isPremium ? "✅ 尊榮" : "❌ 一般";
+                rHtml += `<tr>
+                    <td style="color:#81c784; font-weight:bold;">⛳ 單局散客</td>
+                    <td style="font-weight:bold; color:#81d4fa; letter-spacing:1px;">${r.pin}</td>
+                    <td>${r.course || '未設定'}</td>
+                    <td>${prem}</td>
+                </tr>`;
+            });
+            document.querySelector('#roomsTable tbody').innerHTML = rHtml || "<tr><td colspan='4' style='text-align:center;'>目前全台沒有人在打球...</td></tr>";
+        }
+
+        // 💡 點擊印鈔機按鈕
+        async function actionGeneratePassCode() {
+            const res = await apiCall("generatePassCode", {});
+            if(res && res.code) {
+                // 彈出系統原生的 prompt，方便手機或電腦直接全選複製
+                prompt("🎉 印鈔成功！請複製這組全新的開通碼發送給總幹事：", res.code);
+                loadDashboard(); 
+            }
+        }
+
+        // 💡 輔助複製功能
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("✅ 已複製開通碼：" + text);
+            }).catch(err => {
+                prompt("請手動複製：", text);
+            });
+        }
+    </script>
+</body>
+</html>
