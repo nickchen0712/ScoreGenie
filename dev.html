@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ScoreGenie (DEV) | 高爾夫最強記分與對戰精靈</title>
+    <title>ScoreGenie | Sandbox Model</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="ScoreGenie DEV">
+    <meta name="apple-mobile-web-app-title" content="ScoreGenie">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
     <meta name="theme-color" content="#0a0a0a">
@@ -142,8 +142,8 @@
 
     <div id="page-lobby" class="page-container active-page">
         <div class="card">
-            <h1 style="color: #ce93d8; font-size: 32px; margin-bottom: 5px;">🧞‍♂️ ScoreGenie <span style="font-size:12px; color:#ffeb3b;">(DEV)</span></h1>
-            <p>測試開發環境沙盒</p>
+            <h1 style="color: #ce93d8; font-size: 32px; margin-bottom: 5px;">🧞‍♂️ ScoreGenie</h1>
+            <p>高爾夫最強記分與對戰精靈</p>
             <button onclick="createSingleRoom()" class="btn-purple">✨ 建立單局記分</button>
             <button onclick="navTo('page-tourney-setup')" class="btn-gold">🏆 建立球隊聯賽 (總幹事)</button>
             <div style="margin: 20px 0; border-top: 1px solid #444; position: relative;"><span style="background: #1e1e1e; padding: 0 10px; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #888; font-size: 14px;">加入球局 / 管理賽事</span></div>
@@ -304,8 +304,6 @@
                     <button type="button" onclick="closeMatch()" class="btn-gray" style="margin-top:10px;">隱藏對戰表</button>
                 </div>
             </div>
-            <hr style="margin: 25px 0;">
-            <button id="btnGenLink" onclick="generateShareLink()" class="btn-gold premium-btn">🔗 產生 Premium 單組戰報</button>
         </div>
     </div>
 
@@ -317,7 +315,7 @@
                 <h3 style="color:#ffd700; margin:0 0 5px 0;">✨ 升級尊榮版</h3>
                 <p style="font-size:12px; color:#aaa; margin-bottom:15px;">解鎖對戰讓桿、四人遊戲與尊榮戰報！</p>
                 <div style="display:flex; gap:10px;">
-                    <input type="text" id="unlockCodeInput" placeholder="輸入開通碼 (測試請打 VIP)" style="margin:0; text-transform:uppercase; font-weight:bold; letter-spacing:2px;">
+                    <input type="text" id="unlockCodeInput" placeholder="輸入開通碼" style="margin:0; text-transform:uppercase; font-weight:bold; letter-spacing:2px;">
                     <button onclick="submitUnlockCode()" class="btn-gold" style="margin:0; width:100px; padding:10px; font-size:14px;">解鎖</button>
                 </div>
             </div>
@@ -397,6 +395,7 @@
         // =====================================================
         // 🚀 系統核心設定：API 連線網址 (gasUrl)
         // =====================================================
+        // 💡 務必填入對應的網址 (下方為範例，請確認是您的正式/測試 URL)
         const gasUrl = "https://script.google.com/macros/s/AKfycbwc9NX9ZXOrr9d2QPCLaXkZ-3Qd13v3rAIzXVYiaLYjKmjlQd_q6Oerrup7Q5WjM3zj0Q/exec"; 
         // =====================================================
         
@@ -709,8 +708,6 @@
             var caption = table.createCaption(); caption.textContent = "🏟️ " + courseInfo; caption.style.fontWeight = "bold"; caption.style.padding = "10px"; caption.style.color = "#81d4fa"; 
             var thead = table.createTHead(), tbody = table.createTBody();
             
-            var totalCols = transposed[0].length;
-
             transposed.forEach((row, rowIndex) => { 
                 var isHoleColumn = (rowIndex >= 1 && rowIndex <= 9) || (rowIndex >= 11 && rowIndex <= 19); var parValue = parseInt(row[1]);
                 if (rowIndex === 0) { 
@@ -853,6 +850,7 @@
             if (res) { alert("儲存成功！"); navTo('page-main'); refreshMainBoard(); } 
         }
 
+        // 💡 修正版：不再跳去幽靈成功頁面，直接進入總幹事大廳
         async function createTournament() { 
             let course = document.getElementById('tourneyCourseSelect').value; 
             let count = document.getElementById('tourneyGroupCount').value; 
@@ -872,28 +870,13 @@
             if (res) { 
                 localStorage.setItem("sg_super_admin", "true"); 
                 currentTourneyId = res.tourneyId; 
-                let html = ""; 
-                let baseUrl = window.location.origin + window.location.pathname;
-                res.pins.forEach((pin, i) => { 
+                res.pins.forEach((pin) => { 
                     localStorage.setItem("isCreator_" + pin, "true"); 
                     localStorage.setItem("current_tourney_" + pin, res.tourneyId); 
-                    let link = baseUrl + "?room=" + pin + "&openExternalBrowser=1"; 
-                    html += `<div style="margin-bottom:10px;"><strong style="color:#ce93d8;">第 ${i+1} 組：</strong> <span style="font-size:20px; color:#fff;">${pin}</span> <br><a href="${link}" target="_blank" style="color:#81d4fa; font-size:12px;">進入記分</a></div>`; 
                 }); 
-                document.getElementById('displayTeamCode').textContent = res.tourneyId; 
-                document.getElementById('tourneyPinsArea').innerHTML = html; 
-                document.getElementById('tourneyDashboardUrl').value = baseUrl + "?liveboard=" + res.tourneyId + "&openExternalBrowser=1"; 
-                navTo('page-tourney-result'); 
+                alert("🏆 賽事建立成功！已為您跳轉至總幹事大廳。");
+                goToTourneyAdmin(res.tourneyId); 
             } 
-        }
-
-        function copyTourneyInfo() { 
-            let text = "🏆 球隊賽事開局完成！\n\n🎯 總幹事管理代碼：" + currentTourneyId + "\n\n📊 即時排行榜網址：\n" + document.getElementById('tourneyDashboardUrl').value + "\n\n⛳ 各組記分 PIN 碼 (請點擊『進入』輸入)：\n"; 
-            document.getElementById('tourneyPinsArea').querySelectorAll('strong').forEach((el, i) => { 
-                text += el.innerText + " " + el.nextElementSibling.innerText + "\n"; 
-            }); 
-            text += "\n(💡 點擊網址會自動跳轉至外部瀏覽器，不怕關掉 LINE 視窗喔！)";
-            navigator.clipboard.writeText(text).then(() => alert("已複製！可以直接貼到 LINE")); 
         }
 
         async function goToTourneyAdmin(tid) { 
@@ -1130,7 +1113,6 @@
         }
 
         async function adminDeleteTourney() { if(!confirm("⚠️ 警告：這將徹底刪除此賽事以及底下所有分組的成績！\n確定要刪除嗎？")) return; const res = await apiCall("deleteTournament", { tourneyId: currentTourneyId }, true, "刪除中..."); if(res) { alert(res.message); window.location.href = '?'; } }
-        async function adminArchiveTourney() { if(!confirm("📦 確定要將此賽事與所有分組封存保留嗎？")) return; const res = await apiCall("archiveTournament", { tourneyId: currentTourneyId }, true, "封存中..."); if(res) { alert(res.message); window.location.href = '?'; } }
 
         async function generateTeamReport() {
             if(!confirm("即將產生全隊報告！這會自動結算並封存所有房間。\n確定全隊都已經打完並確認過成績了嗎？")) return;
