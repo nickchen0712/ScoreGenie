@@ -424,7 +424,6 @@
         let currentTourneyData = []; 
         let currentRoomIsPremium = false;
 
-        // 💡 紀錄當前正在瀏覽的戰報 ID 與母賽事 ID (無縫切換用)
         let currentViewedReportId = "";
         let parentTeamReportId = "";
 
@@ -487,7 +486,6 @@
             var treport = urlParams.get('treport');
             var liveboard = urlParams.get('liveboard');
             
-            // 💡 接收從全隊戰報傳來的 parent 參數
             var parentParam = urlParams.get('parent');
             if (parentParam) parentTeamReportId = parentParam;
 
@@ -598,21 +596,20 @@
             forceExit();
         }
 
+        // 💡 修正：點擊「封存並產生尊榮戰報」後無縫跳轉
         async function actionArchiveAndReport() {
             const resReport = await apiCall("createPermanentReport", { pin: currentPin }, true, "產生戰報中...");
             if (resReport && resReport.permId) {
                 await apiCall("archiveRoom", { pin: currentPin }, true, "封存球局中...");
                 
-                let url = window.location.origin + window.location.pathname + "?report=" + resReport.permId + "&openExternalBrowser=1"; 
-                try { 
-                    await navigator.clipboard.writeText(url); 
-                    alert("🎉 尊榮戰報已產生，球局已封存！\n網址已複製，請直接貼到 LINE 群組：\n\n" + url); 
-                } catch(e) { 
-                    prompt("🎉 尊榮戰報已產生，球局已封存！請複製以下網址分享：", url); 
-                }
-                
                 document.getElementById('leaveModal').style.display = 'none';
-                forceExit();
+                localStorage.removeItem("sg_pin");
+                currentPin = "";
+                
+                alert("🎉 球局已成功封存！現在為您開啟「尊榮戰報」，您可以慢慢瀏覽並透過 Email 寄送備份。");
+                
+                window.history.pushState({report: resReport.permId}, "", "?report=" + resReport.permId + "&openExternalBrowser=1");
+                loadReport(resReport.permId);
             }
         }
 
@@ -871,6 +868,7 @@
         }
 
         async function refreshSetupMatchups() { let players = []; for(let i=0; i<4; i++) players.push(document.getElementById(`sp_${i}`).value); let initRanks = [ document.getElementById('initRank1').value, document.getElementById('initRank2').value, document.getElementById('initRank3').value, document.getElementById('initRank4').value ]; const res = await apiCall("saveSetupData", { pin: currentPin, players: players, handicaps: [], dynMode: "None", initRank: initRanks }, false, "更新組合..."); if (res) loadSetupData(); }
+        async function autoFillHandicaps() { var btn = document.getElementById("adminAutoFillBtn"); var orig = btn.textContent; btn.disabled = true; btn.textContent = "🪄 查詢中..."; var matchups = []; document.querySelectorAll(".setup-handicap-label").forEach(lbl => matchups.push(lbl.textContent)); const res = await apiCall("fetchExternalHandicaps", { matchups: matchups }, false, "抓取資料..."); if (res && res.handicaps) { var inputs = document.querySelectorAll(".setup-handicap-input"); var fillCount = 0; inputs.forEach((input, i) => { if (res.handicaps[i] !== "" && res.handicaps[i] !== null) { input.value = res.handicaps[i]; fillCount++; } }); if (fillCount === 0) alert("找不到對應的讓桿資料！"); } btn.disabled = false; btn.textContent = orig; }
         async function applyCourse() { let course = document.getElementById('setupCourseSelect').value; let tee = document.getElementById('setupTeeOff').value; let hdcpMode = document.getElementById('setupHdcpMode').value; if(!course && document.getElementById('setupCourseSelect').disabled === false) return alert("請選擇球場"); const res = await apiCall("applyCourseData", { pin: currentPin, courseName: course, teeOff: tee, hdcpMode: hdcpMode, manualPars:[], manualStdHdcp:[] }, false, "套用球場..."); if (res) { alert(res.message); document.getElementById('holeSelect').value = (tee === "IN") ? "10" : "1"; } }
         
         async function saveSetup() { 
@@ -924,6 +922,15 @@
                 document.getElementById('tourneyDashboardUrl').value = baseUrl + "?liveboard=" + res.tourneyId + "&openExternalBrowser=1"; 
                 navTo('page-tourney-result'); 
             } 
+        }
+
+        function copyTourneyInfo() { 
+            let text = "🏆 球隊賽事開局完成！\n\n🎯 總幹事管理代碼：" + currentTourneyId + "\n\n📊 即時排行榜網址：\n" + document.getElementById('tourneyDashboardUrl').value + "\n\n⛳ 各組記分 PIN 碼 (請點擊『進入』輸入)：\n"; 
+            document.getElementById('tourneyPinsArea').querySelectorAll('strong').forEach((el, i) => { 
+                text += el.innerText + " " + el.nextElementSibling.innerText + "\n"; 
+            }); 
+            text += "\n(💡 點擊網址會自動跳轉至外部瀏覽器，不怕關掉 LINE 視窗喔！)";
+            navigator.clipboard.writeText(text).then(() => alert("已複製！可以直接貼到 LINE")); 
         }
 
         let currentFirstPin = "";
@@ -1179,13 +1186,17 @@
         async function generateTeamReport() {
             if(!confirm("即將產生全隊報告！這會自動結算並封存所有房間。\n確定全隊都已經打完並確認過成績了嗎？")) return;
             const res = await apiCall("generateTeamReport", { tourneyId: currentTourneyId, finalLeaderboard: currentTourneyData }, true, "產生全隊戰報...");
-            if(res && res.reportId) { window.location.href = "?treport=" + res.reportId; }
+            if(res && res.reportId) { 
+                alert("🎉 全隊戰報已產生並封存完畢！為您跳轉至戰報畫面。");
+                window.history.pushState({treport: res.reportId}, "", "?treport=" + res.reportId + "&openExternalBrowser=1");
+                loadTeamReport(res.reportId);
+            }
         }
 
         // 💡 無縫跳轉：全隊戰報
         async function loadTeamReport(reportId) {
             navTo('page-team-report'); 
-            currentViewedReportId = reportId; // 紀錄當前報表 ID 給 Email 用
+            currentViewedReportId = reportId; 
             
             const res = await apiCall("getTeamReportData", { reportId: reportId }, true, "載入全隊報告..."); if(!res) return;
             document.getElementById('trCourseDate').textContent = "🏟️ " + res.courseName + " ｜ 📅 " + new Date(res.date).toLocaleDateString();
@@ -1196,7 +1207,6 @@
             let linksHtml = ""; 
             if(res.groupReports) { 
                 res.groupReports.forEach((g, i) => { 
-                    // 💡 修改：這裡不再是開新分頁，而是呼叫無縫切換的 JS 函數
                     linksHtml += `<div style="background:#252525; padding:10px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;"><span style="color:#ce93d8; font-weight:bold;">第 ${i+1} 組 (${g.pin})</span><button onclick="navToGroupReport('${g.reportId}', '${reportId}')" style="background:#0277bd; color:white; border:none; padding:8px 15px; border-radius:5px; font-size:12px; cursor:pointer;">查看單組戰報</button></div>`; 
                 }); 
             } 
@@ -1206,7 +1216,6 @@
         // 💡 無縫跳轉核心：跳去單組
         function navToGroupReport(groupId, parentId) {
             parentTeamReportId = parentId;
-            // 變更網址列但不重新整理網頁
             window.history.pushState({report: groupId, parent: parentId}, "", "?report=" + groupId + "&parent=" + parentId);
             loadReport(groupId);
         }
@@ -1214,10 +1223,9 @@
         // 💡 無縫跳轉核心：跳回全隊
         function navBackToTeamReport() {
             if(parentTeamReportId) {
-                // 變更網址列但不重新整理網頁
                 window.history.pushState({treport: parentTeamReportId}, "", "?treport=" + parentTeamReportId);
                 loadTeamReport(parentTeamReportId);
-                parentTeamReportId = ""; // 清空 parent，確保下次不再錯誤觸發
+                parentTeamReportId = ""; 
             }
         }
 
@@ -1227,13 +1235,21 @@
         // ==========================
         // 單局戰報與原本功能
         // ==========================
-        async function generateShareLink() { var btn = document.getElementById("btnGenLink"); var orig = btn.textContent; btn.textContent = "正在護貝中..."; btn.disabled = true; const res = await apiCall("createPermanentReport", { pin: currentPin }, false, "產生戰報..."); btn.textContent = orig; btn.disabled = false; if (res && res.permId) { let url = window.location.origin + window.location.pathname + "?report=" + res.permId + "&openExternalBrowser=1"; try { await navigator.clipboard.writeText(url); alert("🎉 專屬戰報已產生！\n網址已複製，請直接到 LINE 貼上即可：\n\n" + url); } catch(e) { prompt("🎉 專屬戰報已產生！請複製以下網址分享到群組：", url); } } }
+        async function generateShareLink() { 
+            var btn = document.getElementById("btnGenLink"); var orig = btn.textContent; btn.textContent = "正在護貝中..."; btn.disabled = true; 
+            const resReport = await apiCall("createPermanentReport", { pin: currentPin }, false, "產生戰報..."); 
+            btn.textContent = orig; btn.disabled = false; 
+            if (resReport && resReport.permId) { 
+                alert("🎉 專屬戰報已產生！為您直接開啟戰報頁面，您可以在該頁面使用 Email 寄送或複製網址。");
+                window.history.pushState({report: resReport.permId}, "", "?report=" + resReport.permId + "&openExternalBrowser=1");
+                loadReport(resReport.permId);
+            } 
+        }
         
         async function loadReport(reportId) {
             navTo('page-report'); 
-            currentViewedReportId = reportId; // 紀錄當前報表 ID 給 Email 用
+            currentViewedReportId = reportId; 
 
-            // 💡 如果有紀錄母賽事 ID，就顯示「返回全隊戰報」按鈕
             if (parentTeamReportId) {
                 document.getElementById('btnBackToTeam').style.display = 'inline-block';
             } else {
@@ -1242,7 +1258,7 @@
 
             const res = await apiCall("getPremiumReportData", { reportId: reportId }, true, "載入戰報..."); if(!res) return;
             document.getElementById("repCourseDate").textContent = "🏟️ " + res.courseInfo + " ｜ 📅 " + res.date;
-            if (res.bountyKing && res.bountyKing.name !== "無") { document.getElementById("repKingName").textContent = res.bountyKing.name; document.getElementById("repKingScore").textContent = (res.bountyKing.score > 0 ? "+" : "") + res.bountyKing.score + " 分"; } else { document.getElementById("repKingName").textContent = "平手 / 激戰中"; document.getElementById("repKingScore").textContent = "-- 分"; }
+            if (res.bountyKing && res.bountyKing.name !== "無") { document.getElementById("repKingName").textContent = res.bountyKing.name; document.getElementById("repKingScore").textContent = (res.bountyKing.score > 0 ? "+" : "") + res.bountyKing.score + " 分"; } else { document.getElementById("repKingName").textContent = "平手 / 激激戰中"; document.getElementById("repKingScore").textContent = "-- 分"; }
             if (res.gameKing && res.gameKing.name !== "無") { document.getElementById("repGameKingName").textContent = res.gameKing.name; document.getElementById("repGameKingScore").textContent = (res.gameKing.score > 0 ? "+" : "") + res.gameKing.score + " 分"; } else { document.getElementById("repGameKingName").textContent = "未啟用 / 激戰中"; document.getElementById("repGameKingScore").textContent = "-- 分"; }
             var statsHtml = ""; res.playerStats.forEach(function(p) { var ptsClass = p.matchPts > 0 ? "pts-positive" : (p.matchPts < 0 ? "pts-negative" : "pts-zero"); var sign = p.matchPts > 0 ? "+" : ""; statsHtml += `<div class="stat-row"><div class="stat-name">${p.name}</div><div class="stat-gross">總桿 ${p.grossScore}</div><div class="stat-pts ${ptsClass}">${sign}${p.matchPts}</div></div>`; }); document.getElementById("repStatsList").innerHTML = statsHtml;
             var eaglesHtml = "", birdiesHtml = ""; if (res.highlights.eagles.length > 0) { res.highlights.eagles.forEach(function(e) { eaglesHtml += `<div class="hl-item hl-eagle">🦅 ${e}</div>`; }); } else { eaglesHtml = '<div class="hl-item" style="color:#777;">🦅 尚無老鷹</div>'; } if (res.highlights.birdies.length > 0) { res.highlights.birdies.forEach(function(b) { birdiesHtml += `<div class="hl-item hl-birdie">🐦 ${b}</div>`; }); } else { birdiesHtml = '<div class="hl-item" style="color:#777;">🐦 尚無抓鳥</div>'; } document.getElementById("repEaglesArea").innerHTML = eaglesHtml; document.getElementById("repBirdiesArea").innerHTML = birdiesHtml;
@@ -1259,12 +1275,10 @@
             
             let isTeam = document.getElementById('page-team-report').classList.contains('active-page');
             
-            // 動態抓取正確的網址
             let url = window.location.origin + window.location.pathname + "?" + (isTeam ? "treport=" : "report=") + currentViewedReportId + "&openExternalBrowser=1";
             
             let subject = isTeam ? "🏆 ScoreGenie 全隊戰報已送達！" : "⛳ ScoreGenie 單組戰報已送達！";
             
-            // 建立高質感的 HTML Email 內容
             let htmlBody = `
                 <div style="font-family: sans-serif; padding: 30px; background: #0a0a0a; color: #fff; text-align: center;">
                     <div style="max-width: 600px; margin: auto; background: #1e1e1e; padding: 40px; border-radius: 12px; border: 1px solid #444;">
@@ -1291,7 +1305,7 @@
             if (res) {
                 alert(res.message);
                 document.getElementById('emailModal').style.display = 'none';
-                document.getElementById('emailInput').value = ""; // 清空欄位
+                document.getElementById('emailInput').value = ""; 
             }
         }
 
