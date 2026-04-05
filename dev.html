@@ -153,7 +153,7 @@
     <div id="page-lobby" class="page-container active-page">
         <div class="card">
             <h1 style="color: #ce93d8; font-size: 32px; margin-bottom: 5px;">🧞‍♂️ ScoreGenie <span style="font-size:12px; color:#ffeb3b;">(DEV)</span></h1>
-            <p>高爾夫最強記分與對戰精靈</p>
+            <p>測試開發環境沙盒</p>
             <button onclick="createSingleRoom()" class="btn-purple">✨ 建立單局記分</button>
             <button onclick="navTo('page-tourney-setup')" class="btn-gold">🏆 建立球隊聯賽 (總幹事)</button>
             <div style="margin: 20px 0; border-top: 1px solid #444; position: relative;"><span style="background: #1e1e1e; padding: 0 10px; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #888; font-size: 14px;">加入球局 / 管理賽事</span></div>
@@ -431,11 +431,9 @@
         let currentViewedReportId = "";
         let parentTeamReportId = "";
 
-        // 💡 智慧背景同步計時器
         let bgSyncTimer = null;
 
         async function apiCall(action, payload = {}, useFullLoader = false, customText = "處理中...", silent = false) {
-            // 如果是靜音模式，就不顯示覆蓋全螢幕的 Loading
             if (!silent) {
                 document.getElementById('miniLoaderText').textContent = customText; 
                 document.getElementById('miniLoader').style.display = 'flex'; 
@@ -528,13 +526,11 @@
             }
         };
 
-        // 💡 啟動智慧背景同步 (每 20 秒執行一次)
         function startBackgroundSync() {
             if (bgSyncTimer) clearInterval(bgSyncTimer);
             bgSyncTimer = setInterval(() => {
-                // 只有在瀏覽器分頁可見，且停留在主畫面時，才執行靜音同步
                 if (!document.hidden && document.getElementById('page-main').classList.contains('active-page')) {
-                    syncAllResults(true); // true = 靜音模式
+                    syncAllResults(true); 
                 }
             }, 20000);
         }
@@ -590,7 +586,6 @@
             navTo('page-main'); 
             refreshMainBoard();
             
-            // 💡 進入主畫面時啟動背景同步
             startBackgroundSync();
         }
 
@@ -634,7 +629,7 @@
                 document.getElementById('leaveModal').style.display = 'none';
                 localStorage.removeItem("sg_pin");
                 
-                if(bgSyncTimer) clearInterval(bgSyncTimer); // 💡 停止背景同步
+                if(bgSyncTimer) clearInterval(bgSyncTimer); 
                 currentPin = "";
                 
                 alert("🎉 球局已成功封存！現在為您開啟「尊榮戰報」，您可以慢慢瀏覽並透過 Email 寄送備份。");
@@ -655,7 +650,7 @@
         }
 
         function forceExit() { 
-            if(bgSyncTimer) clearInterval(bgSyncTimer); // 💡 停止背景同步
+            if(bgSyncTimer) clearInterval(bgSyncTimer); 
             localStorage.removeItem("sg_pin"); 
             currentPin = ""; 
             window.location.href = '?'; 
@@ -703,25 +698,19 @@
             renderQuickMatch(res.matchData, res.isPremium);
         }
 
-        // 💡 智慧同步雙引擎：整合呼叫 API 並自動重繪所有開啟的面板
         async function syncAllResults(silent = false) {
             let btn = document.getElementById('btnSyncMain');
             if(btn && !silent) { btn.innerHTML = "⏳"; btn.disabled = true; }
             
-            // 使用 getAllDataForImage 進行一次性高效率抓取
             const data = await apiCall("getAllDataForImage", { pin: currentPin }, false, "同步中...", silent);
             
             if(btn && !silent) { btn.innerHTML = "🔄 同步"; btn.disabled = false; }
             
             if (data) {
-                // 若記分卡展開中，則更新
                 if (document.getElementById("scorecardArea").style.display === "block") renderTable(data.score);
-                // 若對戰表展開中，則更新
                 if (document.getElementById("matchArea").style.display === "block") renderMatchTable(data.match);
-                // 若四人遊戲大表展開中，則更新
                 if (document.getElementById("dynGameModal").style.display === "block" && !data.dynGame.error) renderDynGameContent(data.dynGame);
                 
-                // 永遠更新外部小視窗
                 if (data.dynGame && !data.dynGame.error) renderQuickDynGame(data.dynGame);
                 if (data.match && data.match.length > 0) renderQuickMatch(data.match, currentRoomIsPremium);
             }
@@ -751,7 +740,6 @@
                 inputs.forEach(inp => inp.value = ""); 
                 if(inputs.length > 0) inputs[0].focus();
                 
-                // 送出成績後，順便觸發一次無聲的全版面重繪
                 if (res.dynData || res.matchData) {
                     syncAllResults(true);
                 }
@@ -781,6 +769,7 @@
             view.innerHTML = `<h4 style="margin:0 0 10px 0; color:#ce93d8;">🎲 四人遊戲 (${res.mode})</h4>` + nextRankHtml + ptsHtml + totalsHtml; view.style.display = 'block';
         }
 
+        // 💡 全新功能：即時對戰小面板 (含個人加總)
         function renderQuickMatch(matchData, isPremium) {
             let view = document.getElementById('quickMatchView'); 
             if (!isPremium || !matchData || matchData.length === 0) { 
@@ -788,15 +777,44 @@
                 return; 
             }
             
+            // 💡 新增：計算每個人的加總分數
+            let playerTotals = {};
+            matchData.forEach(m => {
+                let parts = m.name.split("-");
+                if(parts.length === 2) {
+                    let p1 = parts[0].trim();
+                    let p2 = parts[1].trim();
+                    let pts = parseInt(m.all) || 0;
+                    playerTotals[p1] = (playerTotals[p1] || 0) + pts;
+                    playerTotals[p2] = (playerTotals[p2] || 0) - pts;
+                }
+            });
+
             let html = `<h4 style="margin:0 0 10px 0; color:#ffb74d;">🏆 對戰即時戰況</h4>`;
-            html += `<div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">`;
             
+            // 💡 新增：顯示每個人目前的加總
+            let pKeys = Object.keys(playerTotals);
+            let widthPct = 100 / pKeys.length;
+            html += `<div style="display:flex; justify-content:space-around; margin-bottom:15px; padding-bottom:12px; border-bottom:1px dashed #444;">`;
+            pKeys.forEach(p => {
+                let tot = playerTotals[p];
+                let color = tot > 0 ? "#ff5252" : (tot < 0 ? "#81c784" : "#ccc");
+                let sign = tot > 0 ? "+" : "";
+                html += `<div style="text-align:center; width:${widthPct}%;">
+                            <div style="font-size:12px; color:#888;">${p}</div>
+                            <div style="font-weight:bold; font-size:18px; color:${color};">${sign}${tot}</div>
+                         </div>`;
+            });
+            html += `</div>`;
+
+            // 原本的對戰組合明細
+            html += `<div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">`;
             matchData.forEach(m => {
                 let pts = m.all;
                 let color = (typeof pts === 'string' && pts.includes('+')) || pts > 0 ? "#ff5252" : (pts < 0 ? "#81c784" : "#ccc");
-                html += `<div style="background:#2c2c2c; padding:8px 12px; border-radius:6px; border:1px solid #444; min-width:80px;">
+                html += `<div style="background:#2c2c2c; padding:8px 12px; border-radius:6px; border:1px solid #444; min-width:70px;">
                             <div style="font-size:11px; color:#aaa; margin-bottom:4px;">${m.name}</div>
-                            <div style="font-weight:bold; font-size:18px; color:${color};">${pts}</div>
+                            <div style="font-weight:bold; font-size:16px; color:${color};">${pts}</div>
                          </div>`;
             });
             
@@ -870,7 +888,6 @@
             });
         }
 
-        // 💡 將對戰表繪製邏輯獨立
         function renderMatchTable(matchData) {
             var tableBody = document.querySelector("#matchTable tbody"); tableBody.innerHTML = ""; 
             matchData.forEach(row => { 
@@ -891,7 +908,6 @@
         }
         function closeMatch() { document.getElementById("matchArea").style.display = "none"; }
 
-        // 💡 將四人遊戲大表繪製邏輯獨立
         function renderDynGameContent(res) {
             if (res.error) return alert(res.error); 
             var html = `<p style='color:#aaa; font-size:14px; margin-bottom:15px;'>玩法模式：${res.mode}</p><h4 style='color:#ff8a80;'>💰 最終累計總分</h4><table class='dyn-table' style='margin-bottom:20px;'><thead><tr>`; 
