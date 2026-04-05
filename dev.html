@@ -992,6 +992,15 @@
             if (document.getElementById('setupHoleOrder')) {
                 document.getElementById('setupHoleOrder').value = res.customHoleOrderStr || "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18";
             }
+
+            // 💡 修復：重新加回權限判斷，把「從 2026 表格自動帶入」的按鈕叫回來！
+            let isCreator = localStorage.getItem("isCreator_" + currentPin) === "true"; 
+            let isSuperAdmin = localStorage.getItem("sg_super_admin") === "true"; 
+            if (isAdminAuth(currentPin) || isCreator || isSuperAdmin) {
+                document.getElementById('adminAutoFillBtn').style.display = 'inline-block'; 
+            } else {
+                document.getElementById('adminAutoFillBtn').style.display = 'none'; 
+            }
         }
 
         async function refreshSetupMatchups() { let players = []; for(let i=0; i<4; i++) players.push(document.getElementById(`sp_${i}`).value); let initRanks = [ document.getElementById('initRank1').value, document.getElementById('initRank2').value, document.getElementById('initRank3').value, document.getElementById('initRank4').value ]; const res = await apiCall("saveSetupData", { pin: currentPin, players: players, handicaps: [], dynMode: "None", initRank: initRanks }, false, "更新組合..."); if (res) loadSetupData(); }
