@@ -117,8 +117,8 @@
         <div style="background:#1e1e1e; padding:20px; border-radius:12px; width:90%; max-width:400px; text-align:center; border: 1px solid #444; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
             <h3 style="color:#ff8a80; margin-top:0;">⛳ 完成球局</h3>
             <p style="font-size:14px; color:#aaa; margin-bottom:20px;">請選擇您要如何處理此球局：</p>
-            <button id="btnLeaveArchiveReport" onclick="actionArchiveAndReport()" class="btn-gold" style="margin-bottom:10px;">📊 封存並產生尊榮戰報</button>
             <button onclick="actionLeaveOnly()" class="btn-gray" style="margin-bottom:10px;">🔙 暫時離開 (保留球局)</button>
+            <button id="btnLeaveArchiveReport" onclick="actionArchiveAndReport()" class="btn-gold" style="margin-bottom:10px;">📊 封存並產生尊榮戰報</button>
             <button id="btnLeaveDelete" onclick="actionDeleteRoom()" class="btn-red" style="margin-bottom:10px; display:none;">🗑️ 徹底刪除此球局 (釋放 PIN)</button>
             <button onclick="document.getElementById('leaveModal').style.display='none'" style="background:transparent; color:#81d4fa; border:1px solid #81d4fa; padding:10px; margin-bottom:0;">取消</button>
         </div>
@@ -153,7 +153,7 @@
     <div id="page-lobby" class="page-container active-page">
         <div class="card">
             <h1 style="color: #ce93d8; font-size: 32px; margin-bottom: 5px;">🧞‍♂️ ScoreGenie <span style="font-size:12px; color:#ffeb3b;">(DEV)</span></h1>
-            <p>測試開發環境沙盒</p>
+            <p>高爾夫最強記分與對戰精靈</p>
             <button onclick="createSingleRoom()" class="btn-purple">✨ 建立單局記分</button>
             <button onclick="navTo('page-tourney-setup')" class="btn-gold">🏆 建立球隊聯賽 (總幹事)</button>
             <div style="margin: 20px 0; border-top: 1px solid #444; position: relative;"><span style="background: #1e1e1e; padding: 0 10px; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #888; font-size: 14px;">加入球局 / 管理賽事</span></div>
@@ -298,7 +298,10 @@
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h2 style="margin: 0; color: #fff;">🧞‍♂️ ScoreGenie</h2>
-                <button onclick="leaveRoom()" class="btn-red" style="width: auto; padding: 8px 12px; font-size: 14px; margin: 0; box-shadow: none;">完成球局</button>
+                <div style="display: flex; gap: 8px;">
+                    <button id="btnSyncMain" onclick="syncAllResults()" class="btn-gray" style="width: auto; padding: 8px 12px; font-size: 14px; margin: 0; box-shadow: none;">🔄 同步</button>
+                    <button onclick="leaveRoom()" class="btn-red" style="width: auto; padding: 8px 12px; font-size: 14px; margin: 0; box-shadow: none;">完成球局</button>
+                </div>
             </div>
             <div class="pin-display">球局 PIN 碼：<span id="displayPin">----</span></div>
             
@@ -309,6 +312,7 @@
             <button id="btnSubmitScore" onclick="submitScores()" class="btn-green">送出本洞成績</button>
 
             <div id="quickDynView" style="display:none; background:#1e1e1e; padding:15px; border-radius:8px; border:1px solid #6a1b9a; margin-top:15px; text-align:center;"></div>
+            <div id="quickMatchView" style="display:none; background:#1e1e1e; padding:15px; border-radius:8px; border:1px solid #e65100; margin-top:15px; text-align:center;"></div>
             
             <hr style="margin: 20px 0;">
             <button type="button" onclick="loadScorecard()" class="btn-blue" id="btnLoadScore">📊 查看完整記分卡</button>
@@ -427,9 +431,15 @@
         let currentViewedReportId = "";
         let parentTeamReportId = "";
 
-        async function apiCall(action, payload = {}, useFullLoader = false, customText = "處理中...") {
-            document.getElementById('miniLoaderText').textContent = customText; 
-            document.getElementById('miniLoader').style.display = 'flex'; 
+        // 💡 智慧背景同步計時器
+        let bgSyncTimer = null;
+
+        async function apiCall(action, payload = {}, useFullLoader = false, customText = "處理中...", silent = false) {
+            // 如果是靜音模式，就不顯示覆蓋全螢幕的 Loading
+            if (!silent) {
+                document.getElementById('miniLoaderText').textContent = customText; 
+                document.getElementById('miniLoader').style.display = 'flex'; 
+            }
             
             try {
                 const response = await fetch(gasUrl, { 
@@ -439,13 +449,19 @@
                 });
                 const json = await response.json();
                 
-                document.getElementById('miniLoader').style.display = 'none';
+                if (!silent) document.getElementById('miniLoader').style.display = 'none';
                 
-                if (!json.success) { alert("伺服器錯誤：" + json.error); return null; }
+                if (!json.success) { 
+                    if(!silent) alert("伺服器錯誤：" + json.error); 
+                    return null; 
+                }
                 return json.data;
             } catch (err) { 
-                document.getElementById('miniLoader').style.display = 'none'; 
-                alert("連線失敗，請檢查網路狀態！"); return null; 
+                if (!silent) {
+                    document.getElementById('miniLoader').style.display = 'none'; 
+                    alert("連線失敗，請檢查網路狀態！"); 
+                }
+                return null; 
             }
         }
 
@@ -489,7 +505,7 @@
             var parentParam = urlParams.get('parent');
             if (parentParam) parentTeamReportId = parentParam;
 
-            const courseData = await apiCall("getCourseList", {}, true, "魔法連線中...");
+            const courseData = await apiCall("getCourseList", {}, true, "魔法連線中...", false);
             if (courseData) { 
                 let opts = '<option value="" disabled selected>請選擇球場</option>'; 
                 courseData.courses.forEach(c => opts += `<option value="${c}">${c}</option>`); 
@@ -511,6 +527,17 @@
                 if(saved) joinRoom(saved); else navTo('page-lobby'); 
             }
         };
+
+        // 💡 啟動智慧背景同步 (每 20 秒執行一次)
+        function startBackgroundSync() {
+            if (bgSyncTimer) clearInterval(bgSyncTimer);
+            bgSyncTimer = setInterval(() => {
+                // 只有在瀏覽器分頁可見，且停留在主畫面時，才執行靜音同步
+                if (!document.hidden && document.getElementById('page-main').classList.contains('active-page')) {
+                    syncAllResults(true); // true = 靜音模式
+                }
+            }, 20000);
+        }
 
         async function createSingleRoom() { 
             const res = await apiCall("createRoom", {}, true, "建立球局..."); 
@@ -562,6 +589,9 @@
             
             navTo('page-main'); 
             refreshMainBoard();
+            
+            // 💡 進入主畫面時啟動背景同步
+            startBackgroundSync();
         }
 
         function leaveRoom() {
@@ -603,6 +633,8 @@
                 
                 document.getElementById('leaveModal').style.display = 'none';
                 localStorage.removeItem("sg_pin");
+                
+                if(bgSyncTimer) clearInterval(bgSyncTimer); // 💡 停止背景同步
                 currentPin = "";
                 
                 alert("🎉 球局已成功封存！現在為您開啟「尊榮戰報」，您可以慢慢瀏覽並透過 Email 寄送備份。");
@@ -622,7 +654,12 @@
             }
         }
 
-        function forceExit() { localStorage.removeItem("sg_pin"); currentPin = ""; window.location.href = '?'; }
+        function forceExit() { 
+            if(bgSyncTimer) clearInterval(bgSyncTimer); // 💡 停止背景同步
+            localStorage.removeItem("sg_pin"); 
+            currentPin = ""; 
+            window.location.href = '?'; 
+        }
 
         async function refreshMainBoard() {
             const res = await apiCall("getPlayers", { pin: currentPin }, false, "同步資料...");
@@ -663,6 +700,31 @@
             }
 
             renderQuickDynGame(res.dynData);
+            renderQuickMatch(res.matchData, res.isPremium);
+        }
+
+        // 💡 智慧同步雙引擎：整合呼叫 API 並自動重繪所有開啟的面板
+        async function syncAllResults(silent = false) {
+            let btn = document.getElementById('btnSyncMain');
+            if(btn && !silent) { btn.innerHTML = "⏳"; btn.disabled = true; }
+            
+            // 使用 getAllDataForImage 進行一次性高效率抓取
+            const data = await apiCall("getAllDataForImage", { pin: currentPin }, false, "同步中...", silent);
+            
+            if(btn && !silent) { btn.innerHTML = "🔄 同步"; btn.disabled = false; }
+            
+            if (data) {
+                // 若記分卡展開中，則更新
+                if (document.getElementById("scorecardArea").style.display === "block") renderTable(data.score);
+                // 若對戰表展開中，則更新
+                if (document.getElementById("matchArea").style.display === "block") renderMatchTable(data.match);
+                // 若四人遊戲大表展開中，則更新
+                if (document.getElementById("dynGameModal").style.display === "block" && !data.dynGame.error) renderDynGameContent(data.dynGame);
+                
+                // 永遠更新外部小視窗
+                if (data.dynGame && !data.dynGame.error) renderQuickDynGame(data.dynGame);
+                if (data.match && data.match.length > 0) renderQuickMatch(data.match, currentRoomIsPremium);
+            }
         }
 
         async function submitScores() {
@@ -689,8 +751,10 @@
                 inputs.forEach(inp => inp.value = ""); 
                 if(inputs.length > 0) inputs[0].focus();
                 
-                if (document.getElementById('scorecardArea').style.display === 'block') loadScorecard();
-                if (res.dynData) renderQuickDynGame(res.dynData);
+                // 送出成績後，順便觸發一次無聲的全版面重繪
+                if (res.dynData || res.matchData) {
+                    syncAllResults(true);
+                }
             } else { 
                 btn.innerHTML = origText; btn.disabled = false; 
             }
@@ -715,6 +779,30 @@
             }); 
             totalsHtml += `</div>`;
             view.innerHTML = `<h4 style="margin:0 0 10px 0; color:#ce93d8;">🎲 四人遊戲 (${res.mode})</h4>` + nextRankHtml + ptsHtml + totalsHtml; view.style.display = 'block';
+        }
+
+        function renderQuickMatch(matchData, isPremium) {
+            let view = document.getElementById('quickMatchView'); 
+            if (!isPremium || !matchData || matchData.length === 0) { 
+                view.style.display = 'none'; 
+                return; 
+            }
+            
+            let html = `<h4 style="margin:0 0 10px 0; color:#ffb74d;">🏆 對戰即時戰況</h4>`;
+            html += `<div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">`;
+            
+            matchData.forEach(m => {
+                let pts = m.all;
+                let color = (typeof pts === 'string' && pts.includes('+')) || pts > 0 ? "#ff5252" : (pts < 0 ? "#81c784" : "#ccc");
+                html += `<div style="background:#2c2c2c; padding:8px 12px; border-radius:6px; border:1px solid #444; min-width:80px;">
+                            <div style="font-size:11px; color:#aaa; margin-bottom:4px;">${m.name}</div>
+                            <div style="font-weight:bold; font-size:18px; color:${color};">${pts}</div>
+                         </div>`;
+            });
+            
+            html += `</div>`;
+            view.innerHTML = html;
+            view.style.display = 'block';
         }
 
         async function loadScorecard() { 
@@ -782,35 +870,60 @@
             });
         }
 
-        async function loadMatchData() { var btn = document.getElementById("btnLoadMatch"); var orig = btn.textContent; btn.disabled = true; const res = await apiCall("getMatchResults", { pin: currentPin }, false, "計算對戰..."); if (res && res.matchData) { var tableBody = document.querySelector("#matchTable tbody"); tableBody.innerHTML = ""; res.matchData.forEach(row => { var tr = document.createElement("tr"); tr.innerHTML = `<td style="text-align:left; font-weight:bold;">${row.name}</td><td style="color:#aaa;">${row.hdcp}</td><td>${row.f9}</td><td>${row.b9}</td><td style="font-weight:bold; color:#ff8a80; background-color:#3e2723;">${row.all}</td><td style="font-weight:bold; color:#81d4fa; background-color:#01579b;">${row.nextHdcp}</td>`; tableBody.appendChild(tr); }); document.getElementById("matchArea").style.display = "block"; } btn.textContent = orig; btn.disabled = false; }
+        // 💡 將對戰表繪製邏輯獨立
+        function renderMatchTable(matchData) {
+            var tableBody = document.querySelector("#matchTable tbody"); tableBody.innerHTML = ""; 
+            matchData.forEach(row => { 
+                var tr = document.createElement("tr"); 
+                tr.innerHTML = `<td style="text-align:left; font-weight:bold;">${row.name}</td><td style="color:#aaa;">${row.hdcp}</td><td>${row.f9}</td><td>${row.b9}</td><td style="font-weight:bold; color:#ff8a80; background-color:#3e2723;">${row.all}</td><td style="font-weight:bold; color:#81d4fa; background-color:#01579b;">${row.nextHdcp}</td>`; 
+                tableBody.appendChild(tr); 
+            }); 
+        }
+
+        async function loadMatchData() { 
+            var btn = document.getElementById("btnLoadMatch"); var orig = btn.textContent; btn.disabled = true; btn.textContent = "載入中...";
+            const res = await apiCall("getMatchResults", { pin: currentPin }, false, "計算對戰..."); 
+            if (res && res.matchData) { 
+                renderMatchTable(res.matchData);
+                document.getElementById("matchArea").style.display = "block"; 
+            } 
+            btn.textContent = orig; btn.disabled = false; 
+        }
         function closeMatch() { document.getElementById("matchArea").style.display = "none"; }
 
+        // 💡 將四人遊戲大表繪製邏輯獨立
+        function renderDynGameContent(res) {
+            if (res.error) return alert(res.error); 
+            var html = `<p style='color:#aaa; font-size:14px; margin-bottom:15px;'>玩法模式：${res.mode}</p><h4 style='color:#ff8a80;'>💰 最終累計總分</h4><table class='dyn-table' style='margin-bottom:20px;'><thead><tr>`; 
+            res.players.forEach(p => html += `<th>${p}</th>`); 
+            html += "</tr></thead><tbody><tr>"; 
+            res.players.forEach(p => { 
+                var tot = res.finalTotals[p]; 
+                var color = tot > 0 ? "#ff5252" : (tot < 0 ? "#81c784" : "#ccc"); 
+                var sign = tot > 0 ? "+" : ""; 
+                html += `<td style='font-weight:bold; font-size:16px; color:${color};'>${sign}${tot}</td>`; 
+            }); 
+            html += "</tr></tbody></table><h4 style='color:#81d4fa;'>⛳ 逐洞戰況明細</h4><table class='dyn-table'><thead><tr><th style='width:10%;'>洞</th><th style='width:22%; font-size:11px;'>單洞排序</th><th style='width:28%; font-size:11px;'>對戰組合</th><th style='width:20%; font-size:12px;'>得分</th><th style='width:20%; font-size:11px;'>下洞順序</th></tr></thead><tbody>"; 
+            res.history.forEach(h => { 
+                var pts1 = h.ptsT1 > 0 ? "+"+h.ptsT1 : h.ptsT1; 
+                var pts2 = h.ptsT2 > 0 ? "+"+h.ptsT2 : h.ptsT2; 
+                var ptsHtml = `<span style='color:${h.ptsT1>0?"#ff5252":"#81c784"}'>T1: ${pts1}</span><br><span style='color:${h.ptsT2>0?"#ff5252":"#81c784"}'>T2: ${pts2}</span>`; 
+                html += `<tr><td>${h.hole}</td><td style='font-size:11px; color:#aaa;'>${h.rank.join("<br>↓<br>")}</td><td style='font-size:12px; font-weight:bold;'><span style='color:#ffb74d'>${h.team1.join(" & ")}</span><br>vs<br><span style='color:#81d4fa'>${h.team2.join(" & ")}</span></td><td style='font-size:12px; font-weight:bold;'>${ptsHtml}</td><td style='font-size:11px; color:#81c784;'>${h.nextRank.join("<br>↓<br>")}</td></tr>`; 
+            }); 
+            html += "</tbody></table>"; 
+            document.getElementById("dynGameContent").innerHTML = html; 
+        }
+
         async function loadDynamicGame() { 
-            var btn = document.getElementById("btnLoadDyn"); var orig = btn.textContent; btn.disabled = true; 
+            var btn = document.getElementById("btnLoadDyn"); var orig = btn.textContent; btn.disabled = true; btn.textContent = "載入中...";
             const res = await apiCall("getDynamicGameData", { pin: currentPin }, false, "計算四人遊戲..."); 
             btn.textContent = orig; btn.disabled = false; 
-            if (res) { 
-                if (res.error) return alert(res.error); 
-                var html = `<p style='color:#aaa; font-size:14px; margin-bottom:15px;'>玩法模式：${res.mode}</p><h4 style='color:#ff8a80;'>💰 最終累計總分</h4><table class='dyn-table' style='margin-bottom:20px;'><thead><tr>`; 
-                res.players.forEach(p => html += `<th>${p}</th>`); 
-                html += "</tr></thead><tbody><tr>"; 
-                res.players.forEach(p => { 
-                    var tot = res.finalTotals[p]; 
-                    var color = tot > 0 ? "#ff5252" : (tot < 0 ? "#81c784" : "#ccc"); 
-                    var sign = tot > 0 ? "+" : ""; 
-                    html += `<td style='font-weight:bold; font-size:16px; color:${color};'>${sign}${tot}</td>`; 
-                }); 
-                html += "</tr></tbody></table><h4 style='color:#81d4fa;'>⛳ 逐洞戰況明細</h4><table class='dyn-table'><thead><tr><th style='width:10%;'>洞</th><th style='width:22%; font-size:11px;'>單洞排序</th><th style='width:28%; font-size:11px;'>對戰組合</th><th style='width:20%; font-size:12px;'>得分</th><th style='width:20%; font-size:11px;'>下洞順序</th></tr></thead><tbody>"; 
-                res.history.forEach(h => { 
-                    var pts1 = h.ptsT1 > 0 ? "+"+h.ptsT1 : h.ptsT1; 
-                    var pts2 = h.ptsT2 > 0 ? "+"+h.ptsT2 : h.ptsT2; 
-                    var ptsHtml = `<span style='color:${h.ptsT1>0?"#ff5252":"#81c784"}'>T1: ${pts1}</span><br><span style='color:${h.ptsT2>0?"#ff5252":"#81c784"}'>T2: ${pts2}</span>`; 
-                    html += `<tr><td>${h.hole}</td><td style='font-size:11px; color:#aaa;'>${h.rank.join("<br>↓<br>")}</td><td style='font-size:12px; font-weight:bold;'><span style='color:#ffb74d'>${h.team1.join(" & ")}</span><br>vs<br><span style='color:#81d4fa'>${h.team2.join(" & ")}</span></td><td style='font-size:12px; font-weight:bold;'>${ptsHtml}</td><td style='font-size:11px; color:#81c784;'>${h.nextRank.join("<br>↓<br>")}</td></tr>`; 
-                }); 
-                html += "</tbody></table>"; 
-                document.getElementById("dynGameContent").innerHTML = html; 
+            if (res && !res.error) { 
+                renderDynGameContent(res);
                 document.getElementById("dynGameModal").style.display = "block"; 
-            } 
+            } else if (res && res.error) {
+                alert(res.error);
+            }
         }
 
         async function submitUnlockCode() {
