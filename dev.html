@@ -12,6 +12,8 @@
     <meta name="theme-color" content="#0a0a0a">
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
         body, html { margin: 0; padding: 0; min-height: 100%; width: 100%; background-color: #0a0a0a; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; }
@@ -308,7 +310,7 @@
             <div id="scoreGrid" class="score-grid"></div>
             
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button id="btnSyncMain" onclick="syncAllResults()" class="btn-gray" style="width: 60px; margin: 0; padding: 0; font-size: 22px; display: flex; justify-content: center; align-items: center;">🔄</button>
+                <button id="btnSyncMain" onclick="syncAllResults()" class="btn-blue" style="width: 60px; margin: 0; padding: 0; font-size: 30px; display: flex; justify-content: center; align-items: center;"><i class="fas fa-sync-alt"></i></button>
                 <button id="btnSubmitScore" onclick="submitScores()" class="btn-green" style="flex: 1; margin: 0;">送出本洞成績</button>
             </div>
 
@@ -699,14 +701,17 @@
             renderQuickMatch(res.matchData, res.isPremium);
         }
 
-        // 💡 更新 JS：讓同步按鈕只顯示圖示
+        // 💡 JS 更新：讓同步按鈕支援 Font Awesome 圖示與狀態切換
         async function syncAllResults(silent = false) {
             let btn = document.getElementById('btnSyncMain');
+            // 定義 Font Awesome 圖示代碼，方便重複使用
+            const syncIconHtml = '<i class="fas fa-sync-alt"></i>';
+            
             if(btn && !silent) { btn.innerHTML = "⏳"; btn.disabled = true; }
             
             const data = await apiCall("getAllDataForImage", { pin: currentPin }, false, "同步中...", silent);
             
-            if(btn && !silent) { btn.innerHTML = "🔄"; btn.disabled = false; }
+            if(btn && !silent) { btn.innerHTML = syncIconHtml; btn.disabled = false; }
             
             if (data) {
                 if (document.getElementById("scorecardArea").style.display === "block") renderTable(data.score);
@@ -742,9 +747,9 @@
                 inputs.forEach(inp => inp.value = ""); 
                 if(inputs.length > 0) inputs[0].focus();
                 
-                if (document.getElementById('scorecardArea').style.display === 'block') loadScorecard();
-                if (res.dynData) renderQuickDynGame(res.dynData);
-                if (res.matchData) renderQuickMatch(res.matchData, res.isPremium);
+                if (res.dynData || res.matchData) {
+                    syncAllResults(true);
+                }
             } else { 
                 btn.innerHTML = origText; btn.disabled = false; 
             }
@@ -873,7 +878,6 @@
                                 var diff = score - parValue; 
                                 var span = document.createElement("span"); span.innerHTML = cell; span.className = "score-box "; 
                                 if (diff <= -2) span.className += "shape-eagle"; else if (diff === -1) span.className += "shape-birdie"; else if (diff === 0) span.className += "shape-par"; else if (diff === 1) span.className += "shape-bogey"; else span.className += "shape-double"; 
-                                cellContent = `<span class="${spanClass}">${cell}</span>`; 
                                 td.appendChild(span); 
                             } else {
                                 td.innerHTML = cell; 
@@ -1409,6 +1413,7 @@
             let btn = document.getElementById('btnSendEmail');
             let origTxt = btn.textContent;
             btn.textContent = "🚀 發送中..."; 
+            btn.disabled = false;
             btn.disabled = true;
 
             const res = await apiCall("sendEmail", { email: email, subject: subject, htmlBody: htmlBody }, true, "傳送 Email 中...");
