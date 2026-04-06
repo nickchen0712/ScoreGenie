@@ -2,135 +2,98 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ScoreGenie | 最高管理員總部</title>
     <link rel="icon" type="image/png" href="icon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { 
-            background-color: #0a0a0a; 
-            color: #fff; 
+            background-color: #0a0a0a; color: #fff; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            margin: 0; 
-            padding: 30px; 
+            margin: 0; padding: 20px; padding-bottom: 80px; 
         }
-        .container { max-width: 1200px; margin: auto; }
+        .container { max-width: 1200px; margin: auto; display: none; }
+        .active-view { display: block; }
+        
         h1, h2, h3 { color: #ce93d8; margin-top: 0; }
         
-        .card { 
-            background: #1e1e1e; 
-            padding: 25px; 
-            border-radius: 12px; 
-            border: 1px solid #333; 
-            margin-bottom: 20px; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.5); 
-        }
-        
-        .grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 30px; 
-            align-items: start;
-        }
+        .card { background: #1e1e1e; padding: 25px; border-radius: 12px; border: 1px solid #333; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; }
         @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
         
-        table { width: 100%; border-collapse: collapse; font-size: 15px; background: #1e1e1e; text-align: left; }
+        table { width: 100%; border-collapse: collapse; font-size: 15px; background: #1e1e1e; text-align: center; }
         th, td { border: 1px solid #444; padding: 12px; }
         th { background: linear-gradient(135deg, #0277bd, #01579b); color: white; position: sticky; top: 0; }
         tr:nth-child(even) { background-color: #252525; }
-        tr:hover { background-color: #333; }
         
-        button { 
-            background: linear-gradient(135deg, #ffd700, #ffb300); 
-            color: #3e2723; 
-            border: none; 
-            padding: 12px 24px; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            font-size: 16px; 
-            transition: transform 0.1s; 
-            box-shadow: 0 4px 10px rgba(255,215,0,0.3);
-        }
+        button { background: linear-gradient(135deg, #ffd700, #ffb300); color: #3e2723; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: transform 0.1s; box-shadow: 0 4px 10px rgba(255,215,0,0.3); display: inline-flex; justify-content: center; align-items: center; gap: 8px; }
         button:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(255,215,0,0.3); }
         .btn-blue { background: linear-gradient(135deg, #29b6f6, #0277bd); color: white; box-shadow: 0 4px 10px rgba(41,182,246,0.3);}
+        .btn-green { background: linear-gradient(135deg, #43a047, #1b5e20); color: white; }
         
-        input, select { 
-            padding: 12px; 
-            font-size: 16px; 
-            border-radius: 8px; 
-            border: 1px solid #555; 
-            background: #333; 
-            color: white; 
-        }
+        input, select { padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid #555; background: #333; color: white; box-sizing: border-box; width: 100%; }
         input:focus, select:focus { outline: none; border-color: #ffd700; }
         
-        #loader { 
-            position: fixed; top: 20px; right: 20px; 
-            background: rgba(30,30,30,0.9); 
-            padding: 10px 20px; border-radius: 20px; 
-            border: 1px solid #ce93d8; color: #ce93d8; 
-            font-weight: bold; z-index: 1000; display: none; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-        }
+        #loader { position: fixed; top: 20px; right: 20px; background: rgba(30,30,30,0.9); padding: 10px 20px; border-radius: 20px; border: 1px solid #ce93d8; color: #ce93d8; font-weight: bold; z-index: 1000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
         
         .status-active { color: #81c784; font-weight: bold; }
         .status-used { color: #ff8a80; }
-        
         .table-container { max-height: 600px; overflow-y: auto; border-radius: 8px; border: 1px solid #444; }
+
+        /* 手機友善底部導覽列 */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); display: none; justify-content: space-around; align-items: center; padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px); border-top: 1px solid #333; z-index: 9999; }
+        .bottom-nav button { background: transparent; border: none; color: #777; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; padding: 0; box-shadow: none; margin: 0; }
+        .bottom-nav button.active { color: #ffd700; }
+        .bottom-nav button i { font-size: 24px; margin-bottom: 2px; }
     </style>
 </head>
 <body>
 
-    <div id="loader">📡 與總部伺服器連線中...</div>
+    <div id="loader"><i class="fas fa-spinner fa-spin"></i> 連線中...</div>
 
-    <div id="loginView" class="container" style="text-align:center; max-width: 400px; margin-top: 15vh;">
+    <div id="adminNav" class="bottom-nav">
+        <button id="navBtnDashboard" onclick="switchView('dashboardView')" class="active"><i class="fas fa-tachometer-alt"></i>戰情雷達</button>
+        <button id="navBtnCourse" onclick="switchView('courseView')"><i class="fas fa-flag"></i>球場管理</button>
+    </div>
+
+    <div id="loginView" class="container active-view" style="text-align:center; max-width: 400px; margin-top: 15vh;">
         <div class="card" style="border-color: #ffd700;">
-            <h1 style="font-size:32px; margin-bottom:5px;">🕵️‍♂️ 總部印鈔機</h1>
-            <p style="color:#aaa; margin-bottom:25px;">ScoreGenie 最高管理員權限核實</p>
-            <input type="password" id="adminPwd" placeholder="輸入金庫密碼" style="width: 100%; box-sizing: border-box; margin-bottom: 20px; text-align:center; letter-spacing:3px;" onkeypress="if(event.key === 'Enter') login()">
-            <button onclick="login()" style="width: 100%;">🔓 登入系統</button>
+            <h1 style="font-size:32px; margin-bottom:5px;"><i class="fas fa-user-secret"></i> 總部印鈔機</h1>
+            <p style="color:#aaa; margin-bottom:25px;">ScoreGenie 最高管理員登入</p>
+            <input type="password" id="adminPwd" placeholder="輸入金庫密碼" style="margin-bottom: 20px; text-align:center; letter-spacing:3px;" onkeypress="if(event.key === 'Enter') login()">
+            <button onclick="login()" style="width: 100%;"><i class="fas fa-unlock-alt"></i> 登入系統</button>
         </div>
     </div>
 
-    <div id="dashboardView" class="container" style="display:none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px dashed #444; padding-bottom: 15px;">
-            <h1 style="margin:0; font-size:36px;">👑 ScoreGenie 營運總部</h1>
-            <div style="display: flex; gap: 15px;">
-                <button onclick="loadDashboard()" class="btn-blue">🔄 更新戰情雷達</button>
-            </div>
+    <div id="dashboardView" class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px dashed #444; padding-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h1 style="margin:0; font-size:28px;"><i class="fas fa-crown"></i> 營運總部</h1>
+            <button onclick="loadDashboard()" class="btn-blue" style="margin:0;"><i class="fas fa-sync-alt"></i> 更新雷達</button>
         </div>
 
         <div class="grid">
             <div class="card">
-                <h3>🎟️ 商業開通碼 (Pass Codes)</h3>
-                <p style="font-size:13px; color:#aaa; margin-bottom:15px;">請選擇要綁定的對象與使用期限，產生後即可發送給總幹事。</p>
-                
-                <div style="display:flex; gap:10px; margin-bottom: 20px; flex-wrap: wrap;">
-                    <select id="passCodeTarget" style="flex: 2; min-width: 150px; margin:0;">
-                        <option value="ALL">通用 (不綁定任何球局)</option>
-                        </select>
+                <h3><i class="fas fa-ticket-alt"></i> 商業開通碼 (Pass Codes)</h3>
+                <div style="display:flex; gap:10px; margin-bottom: 15px; flex-wrap: wrap;">
+                    <select id="passCodeTarget" style="flex: 2; min-width: 150px; margin:0;"><option value="ALL">通用 (不綁定球局)</option></select>
                     <select id="passCodeExpire" style="flex: 1; min-width: 100px; margin:0;">
-                        <option value="24">效期 24 小時</option>
-                        <option value="48">效期 48 小時</option>
-                        <option value="72">效期 72 小時</option>
+                        <option value="24">24 小時</option><option value="48">48 小時</option><option value="72">72 小時</option>
                     </select>
-                    <button onclick="actionGeneratePassCode()" class="btn-gold" style="margin:0; flex: 1; min-width: 120px;">✨ 產生開通碼</button>
+                    <button onclick="actionGeneratePassCode()" style="margin:0; flex: 1; min-width: 100px;"><i class="fas fa-magic"></i> 產生</button>
                 </div>
-
                 <div class="table-container">
                     <table id="codesTable">
-                        <thead><tr><th>開通碼</th><th>狀態</th><th>綁定對象</th><th>到期時間</th></tr></thead>
+                        <thead><tr><th>開通碼</th><th>狀態</th><th>綁定</th><th>到期</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
             </div>
 
             <div class="card">
-                <h3>📡 雷達監控：活動中球局與賽事</h3>
-                <p style="font-size:13px; color:#aaa; margin-bottom:15px;">即時掌握全站有哪些球隊或散客正在記分。</p>
+                <h3><i class="fas fa-satellite-dish"></i> 活動中球局與賽事</h3>
                 <div class="table-container">
                     <table id="roomsTable">
-                        <thead><tr><th>類型</th><th>PIN / 賽事</th><th>球場</th><th>尊榮狀態</th></tr></thead>
+                        <thead><tr><th>類型</th><th>PIN/賽事</th><th>球場</th><th>尊榮</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -138,9 +101,33 @@
         </div>
     </div>
 
+    <div id="courseView" class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px dashed #444; padding-bottom: 15px;">
+            <h1 style="margin:0; font-size:28px;"><i class="fas fa-flag"></i> 球場資料庫</h1>
+        </div>
+
+        <div class="card" style="max-width: 600px; margin: auto;">
+            <p style="font-size:13px; color:#aaa; margin-bottom:15px;">請輸入完整的 18 洞 Par (標準桿) 與 HDCP (讓桿難易度) 資料。若輸入的球場名稱已存在，將會直接覆蓋更新。</p>
+            
+            <label style="color:#81d4fa; font-weight:bold; margin-bottom:5px; display:block; text-align:left;">⛳ 球場名稱</label>
+            <input type="text" id="newCourseName" placeholder="例如：東華, 揚昇, 台北..." style="margin-bottom: 20px;">
+
+            <div class="table-container" style="margin-bottom: 20px; max-height: none;">
+                <table id="courseGridTable">
+                    <thead><tr><th style="width:20%;">洞號</th><th style="width:40%;">Par (3~6)</th><th style="width:40%;">HDCP (1~18)</th></tr></thead>
+                    <tbody id="courseHolesBody">
+                        </tbody>
+                </table>
+            </div>
+
+            <button onclick="submitNewCourse()" class="btn-green" style="width:100%;"><i class="fas fa-save"></i> 儲存球場資料</button>
+            <button onclick="document.getElementById('newCourseName').value=''; buildCourseGrid();" class="btn-gray" style="width:100%;"><i class="fas fa-eraser"></i> 清空重填</button>
+        </div>
+    </div>
+
     <script>
-        // 💡 [DEV測試版] 這是您測試用的 API 網址，當您要發布正式版 admin 時，請改為正式網址
-        const gasUrl = "https://script.google.com/macros/s/AKfycbymh6lss_alVcp6-hyrQVFq9l6QJY89hq5oMks5DT7HRwmY9WY0nEwCbt7R5-jixhgE/exec";
+        // 💡 務必確認這是您的「正式版」 GAS 網址！
+        const gasUrl = "https://script.google.com/macros/s/AKfycbwc9NX9ZXOrr9d2QPCLaXkZ-3Qd13v3rAIzXVYiaLYjKmjlQd_q6Oerrup7Q5WjM3zj0Q/exec";
 
         async function apiCall(action, payload = {}) {
             document.getElementById('loader').style.display = 'block';
@@ -163,105 +150,113 @@
         function login() {
             const pwd = document.getElementById('adminPwd').value;
             if(pwd === "7867") { 
-                document.getElementById('loginView').style.display = 'none';
-                document.getElementById('dashboardView').style.display = 'block';
+                document.getElementById('adminNav').style.display = 'flex';
+                switchView('dashboardView');
                 loadDashboard();
+                buildCourseGrid(); // 準備好球場的輸入表格
             } else {
                 alert("密碼錯誤！");
                 document.getElementById('adminPwd').value = "";
             }
         }
 
+        function switchView(viewId) {
+            document.querySelectorAll('.container').forEach(v => v.classList.remove('active-view'));
+            document.getElementById(viewId).classList.add('active-view');
+            document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+            
+            if(viewId === 'dashboardView') document.getElementById('navBtnDashboard').classList.add('active');
+            if(viewId === 'courseView') document.getElementById('navBtnCourse').classList.add('active');
+        }
+
         async function loadDashboard() {
             const res = await apiCall("getSuperAdminDashboard", {});
             if (!res) return;
 
-            let tourneys = res.tourneys || [];
-            let rooms = res.rooms || [];
-            let codes = res.codes || [];
+            let tourneys = res.tourneys || []; let rooms = res.rooms || []; let codes = res.codes || [];
             let now = new Date().getTime();
 
-            // 1. 產生下拉選單 (只顯示尚未尊榮的球局，方便您選擇)
+            // 1. 下拉選單
             let targetSelect = document.getElementById('passCodeTarget');
-            let optionsHtml = `<option value="ALL">通用 (不綁定任何球局)</option>`;
-            
-            tourneys.sort((a,b) => b.date - a.date).forEach(t => {
-                optionsHtml += `<option value="${t.id}">🏆 賽事: ${t.id} (${t.course})</option>`;
-            });
-            rooms.sort((a,b) => b.timestamp - a.timestamp).forEach(r => {
-                if(r.tourneyId) return;
-                optionsHtml += `<option value="${r.pin}">⛳ 單局: ${r.pin} (${r.course || '未設定'})</option>`;
-            });
+            let optionsHtml = `<option value="ALL">通用 (不綁定球局)</option>`;
+            tourneys.sort((a,b) => b.date - a.date).forEach(t => { optionsHtml += `<option value="${t.id}">🏆 賽事: ${t.id} (${t.course})</option>`; });
+            rooms.sort((a,b) => b.timestamp - a.timestamp).forEach(r => { if(!r.tourneyId) optionsHtml += `<option value="${r.pin}">⛳ 單局: ${r.pin} (${r.course || '未設定'})</option>`; });
             targetSelect.innerHTML = optionsHtml;
 
-            // 2. 渲染開通碼表格
+            // 2. 開通碼
             let cHtml = "";
             codes.sort((a,b) => b.createdAt - a.createdAt).forEach(c => {
                 let isExpired = c.expireAt && now > c.expireAt && c.status === 'active';
                 let statusClass = c.status === 'active' ? (isExpired ? 'status-used' : 'status-active') : 'status-used';
                 let statusText = c.status === 'active' ? (isExpired ? '已過期' : '可使用') : '已開通';
-                
                 let expireDateStr = c.expireAt ? new Date(c.expireAt).toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute:'2-digit' }) : '-';
-                
-                let codeDisplay = (c.status === 'active' && !isExpired) 
-                    ? `<span style="cursor:pointer;" title="點擊複製" onclick="copyToClipboard('${c.code}')">${c.code} 📋</span>` 
-                    : c.code;
-
+                let codeDisplay = (c.status === 'active' && !isExpired) ? `<span style="cursor:pointer;" title="點擊複製" onclick="copyToClipboard('${c.code}')">${c.code} 📋</span>` : c.code;
                 let bindTarget = c.assignedTo === "ALL" || !c.assignedTo ? "通用" : c.assignedTo;
 
-                cHtml += `<tr>
-                    <td style="font-weight:bold; letter-spacing:2px; color:#ffd700;">${codeDisplay}</td>
-                    <td class="${statusClass}">${statusText}</td>
-                    <td style="color:#81d4fa;">${bindTarget}</td>
-                    <td style="color:#aaa; font-size: 13px;">${expireDateStr}</td>
-                </tr>`;
+                cHtml += `<tr><td style="font-weight:bold; letter-spacing:2px; color:#ffd700;">${codeDisplay}</td><td class="${statusClass}">${statusText}</td><td style="color:#81d4fa;">${bindTarget}</td><td style="color:#aaa; font-size: 13px;">${expireDateStr}</td></tr>`;
             });
-            document.querySelector('#codesTable tbody').innerHTML = cHtml || "<tr><td colspan='4' style='text-align:center;'>目前金庫空空如也，請印鈔！</td></tr>";
+            document.querySelector('#codesTable tbody').innerHTML = cHtml || "<tr><td colspan='4' style='text-align:center;'>目前金庫空空如也！</td></tr>";
 
-            // 3. 渲染雷達監控表格
+            // 3. 雷達
             let rHtml = "";
-            tourneys.sort((a,b) => b.date - a.date).forEach(t => {
-                rHtml += `<tr>
-                    <td style="color:#ffd700; font-weight:bold;">🏆 賽事 (${t.pins.length}組)</td>
-                    <td style="font-weight:bold; color:#ce93d8; letter-spacing:1px;">${t.id}</td>
-                    <td>${t.course}</td>
-                    <td>-</td>
-                </tr>`;
-            });
-            
-            rooms.sort((a,b) => b.timestamp - a.timestamp).forEach(r => {
-                if(r.tourneyId) return; 
-                let prem = r.isPremium ? "✅ 尊榮" : "❌ 一般";
-                rHtml += `<tr>
-                    <td style="color:#81c784; font-weight:bold;">⛳ 單局散客</td>
-                    <td style="font-weight:bold; color:#81d4fa; letter-spacing:1px;">${r.pin}</td>
-                    <td>${r.course || '未設定'}</td>
-                    <td>${prem}</td>
-                </tr>`;
-            });
-            document.querySelector('#roomsTable tbody').innerHTML = rHtml || "<tr><td colspan='4' style='text-align:center;'>目前全台沒有人在打球...</td></tr>";
+            tourneys.sort((a,b) => b.date - a.date).forEach(t => { rHtml += `<tr><td style="color:#ffd700; font-weight:bold;">🏆賽事(${t.pins.length}組)</td><td style="font-weight:bold; color:#ce93d8;">${t.id}</td><td>${t.course}</td><td>-</td></tr>`; });
+            rooms.sort((a,b) => b.timestamp - a.timestamp).forEach(r => { if(r.tourneyId) return; let prem = r.isPremium ? "✅ 尊榮" : "❌ 一般"; rHtml += `<tr><td style="color:#81c784; font-weight:bold;">⛳單局</td><td style="font-weight:bold; color:#81d4fa;">${r.pin}</td><td>${r.course || '未設定'}</td><td>${prem}</td></tr>`; });
+            document.querySelector('#roomsTable tbody').innerHTML = rHtml || "<tr><td colspan='4' style='text-align:center;'>目前沒有人在打球...</td></tr>";
         }
 
         async function actionGeneratePassCode() {
             let targetId = document.getElementById('passCodeTarget').value;
             let expireHours = document.getElementById('passCodeExpire').value;
             let targetName = targetId === "ALL" ? "通用" : targetId;
-            
             if(!confirm(`確定要產生一組新代碼？\n綁定對象：${targetName}\n使用期限：${expireHours} 小時`)) return;
 
             const res = await apiCall("generatePassCode", { targetId: targetId, expireHours: expireHours });
-            if(res && res.code) {
-                prompt("🎉 印鈔成功！請複製這組全新的開通碼發送給總幹事：", res.code);
-                loadDashboard(); 
-            }
+            if(res && res.code) { prompt("🎉 印鈔成功！請複製這組全新的開通碼發送給總幹事：", res.code); loadDashboard(); }
         }
 
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert("✅ 已複製開通碼：" + text);
-            }).catch(err => {
-                prompt("請手動複製：", text);
-            });
+        function copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => { alert("✅ 已複製開通碼：" + text); }).catch(err => { prompt("請手動複製：", text); }); }
+
+        // ==========================
+        // ⛳ 球場管理邏輯
+        // ==========================
+        function buildCourseGrid() {
+            let html = "";
+            for(let i=1; i<=18; i++) {
+                html += `<tr>
+                    <td style="font-weight:bold; color:#81d4fa;">${i}</td>
+                    <td><input type="number" id="cp_${i}" value="4" min="3" max="6" inputmode="numeric" pattern="[0-9]*" style="margin:0; padding:10px; text-align:center;"></td>
+                    <td><input type="number" id="ch_${i}" value="${i}" min="1" max="18" inputmode="numeric" pattern="[0-9]*" style="margin:0; padding:10px; text-align:center;"></td>
+                </tr>`;
+            }
+            document.getElementById('courseHolesBody').innerHTML = html;
+        }
+
+        async function submitNewCourse() {
+            let name = document.getElementById('newCourseName').value.trim();
+            if(!name) return alert("請輸入球場名稱！");
+            
+            let pars = [];
+            let hdcps = [];
+            let hasError = false;
+
+            for(let i=1; i<=18; i++) {
+                let p = parseInt(document.getElementById(`cp_${i}`).value);
+                let h = parseInt(document.getElementById(`ch_${i}`).value);
+                if(isNaN(p) || isNaN(h)) hasError = true;
+                pars.push(p);
+                hdcps.push(h);
+            }
+
+            if(hasError) return alert("請確認 18 洞的 Par 和 HDCP 都有輸入數字！");
+
+            if(!confirm(`確定要儲存球場「${name}」嗎？\n(若名稱已存在將會直接更新資料)`)) return;
+
+            const res = await apiCall("addCustomCourse", { courseName: name, pars: pars, hdcps: hdcps });
+            if(res && res.message) {
+                alert(res.message);
+                document.getElementById('newCourseName').value = "";
+                buildCourseGrid();
+            }
         }
     </script>
 </body>
