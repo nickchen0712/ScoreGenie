@@ -298,10 +298,7 @@
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h2 style="margin: 0; color: #fff;">🧞‍♂️ ScoreGenie</h2>
-                <div style="display: flex; gap: 8px;">
-                    <button id="btnSyncMain" onclick="syncAllResults()" class="btn-gray" style="width: auto; padding: 8px 12px; font-size: 14px; margin: 0; box-shadow: none;">🔄 同步</button>
-                    <button onclick="leaveRoom()" class="btn-red" style="width: auto; padding: 8px 12px; font-size: 14px; margin: 0; box-shadow: none;">完成球局</button>
-                </div>
+                <button onclick="leaveRoom()" class="btn-red" style="width: auto; padding: 8px 12px; font-size: 14px; margin: 0; box-shadow: none;">完成球局</button>
             </div>
             <div class="pin-display">球局 PIN 碼：<span id="displayPin">----</span></div>
             
@@ -309,7 +306,11 @@
             
             <select id="holeSelect"><option value="" disabled selected>請選擇洞號</option></select>
             <div id="scoreGrid" class="score-grid"></div>
-            <button id="btnSubmitScore" onclick="submitScores()" class="btn-green">送出本洞成績</button>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button id="btnSyncMain" onclick="syncAllResults()" class="btn-gray" style="width: 60px; margin: 0; padding: 0; font-size: 22px; display: flex; justify-content: center; align-items: center;">🔄</button>
+                <button id="btnSubmitScore" onclick="submitScores()" class="btn-green" style="flex: 1; margin: 0;">送出本洞成績</button>
+            </div>
 
             <div id="quickDynView" style="display:none; background:#1e1e1e; padding:15px; border-radius:8px; border:1px solid #6a1b9a; margin-top:15px; text-align:center;"></div>
             <div id="quickMatchView" style="display:none; background:#1e1e1e; padding:15px; border-radius:8px; border:1px solid #e65100; margin-top:15px; text-align:center;"></div>
@@ -698,13 +699,14 @@
             renderQuickMatch(res.matchData, res.isPremium);
         }
 
+        // 💡 更新 JS：讓同步按鈕只顯示圖示
         async function syncAllResults(silent = false) {
             let btn = document.getElementById('btnSyncMain');
             if(btn && !silent) { btn.innerHTML = "⏳"; btn.disabled = true; }
             
             const data = await apiCall("getAllDataForImage", { pin: currentPin }, false, "同步中...", silent);
             
-            if(btn && !silent) { btn.innerHTML = "🔄 同步"; btn.disabled = false; }
+            if(btn && !silent) { btn.innerHTML = "🔄"; btn.disabled = false; }
             
             if (data) {
                 if (document.getElementById("scorecardArea").style.display === "block") renderTable(data.score);
@@ -740,9 +742,9 @@
                 inputs.forEach(inp => inp.value = ""); 
                 if(inputs.length > 0) inputs[0].focus();
                 
-                if (res.dynData || res.matchData) {
-                    syncAllResults(true);
-                }
+                if (document.getElementById('scorecardArea').style.display === 'block') loadScorecard();
+                if (res.dynData) renderQuickDynGame(res.dynData);
+                if (res.matchData) renderQuickMatch(res.matchData, res.isPremium);
             } else { 
                 btn.innerHTML = origText; btn.disabled = false; 
             }
@@ -769,7 +771,6 @@
             view.innerHTML = `<h4 style="margin:0 0 10px 0; color:#ce93d8;">🎲 四人遊戲 (${res.mode})</h4>` + nextRankHtml + ptsHtml + totalsHtml; view.style.display = 'block';
         }
 
-        // 💡 全新功能：即時對戰小面板 (含個人加總)
         function renderQuickMatch(matchData, isPremium) {
             let view = document.getElementById('quickMatchView'); 
             if (!isPremium || !matchData || matchData.length === 0) { 
@@ -777,7 +778,6 @@
                 return; 
             }
             
-            // 💡 新增：計算每個人的加總分數
             let playerTotals = {};
             matchData.forEach(m => {
                 let parts = m.name.split("-");
@@ -792,7 +792,6 @@
 
             let html = `<h4 style="margin:0 0 10px 0; color:#ffb74d;">🏆 對戰即時戰況</h4>`;
             
-            // 💡 新增：顯示每個人目前的加總
             let pKeys = Object.keys(playerTotals);
             let widthPct = 100 / pKeys.length;
             html += `<div style="display:flex; justify-content:space-around; margin-bottom:15px; padding-bottom:12px; border-bottom:1px dashed #444;">`;
@@ -807,7 +806,6 @@
             });
             html += `</div>`;
 
-            // 原本的對戰組合明細
             html += `<div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">`;
             matchData.forEach(m => {
                 let pts = m.all;
@@ -875,6 +873,7 @@
                                 var diff = score - parValue; 
                                 var span = document.createElement("span"); span.innerHTML = cell; span.className = "score-box "; 
                                 if (diff <= -2) span.className += "shape-eagle"; else if (diff === -1) span.className += "shape-birdie"; else if (diff === 0) span.className += "shape-par"; else if (diff === 1) span.className += "shape-bogey"; else span.className += "shape-double"; 
+                                cellContent = `<span class="${spanClass}">${cell}</span>`; 
                                 td.appendChild(span); 
                             } else {
                                 td.innerHTML = cell; 
@@ -993,7 +992,6 @@
                 document.getElementById('setupHoleOrder').value = res.customHoleOrderStr || "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18";
             }
 
-            // 💡 修復：重新加回權限判斷，把「從 2026 表格自動帶入」的按鈕叫回來！
             let isCreator = localStorage.getItem("isCreator_" + currentPin) === "true"; 
             let isSuperAdmin = localStorage.getItem("sg_super_admin") === "true"; 
             if (isAdminAuth(currentPin) || isCreator || isSuperAdmin) {
