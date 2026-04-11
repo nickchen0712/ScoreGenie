@@ -12,9 +12,7 @@
     <meta name="theme-color" content="#0a0a0a">
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
     <style>
         body, html { margin: 0; padding: 0; min-height: 100%; width: 100%; background-color: #0a0a0a; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; }
         .page-container { display: none; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; padding-bottom: 90px !important; box-sizing: border-box; }
@@ -26,7 +24,6 @@
         button { width: 100%; padding: 15px; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px; transition: all 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; gap: 8px;}
         button:active { transform: translateY(2px); box-shadow: 0 2px 3px rgba(0,0,0,0.2); }
         button:disabled { background: #555 !important; color: #888 !important; cursor: not-allowed; }
-        
         .btn-purple { background: linear-gradient(135deg, #ab47bc, #6a1b9a); } 
         .btn-green { background: linear-gradient(135deg, #43a047, #1b5e20); } 
         .btn-orange { background: linear-gradient(135deg, #ffa726, #e65100); } 
@@ -34,14 +31,11 @@
         .btn-gray { background: linear-gradient(135deg, #78909c, #37474f); } 
         .btn-gold { background: linear-gradient(135deg, #ffd700, #ffb300); color: #3e2723; } 
         .btn-red { background: linear-gradient(135deg, #ef5350, #c62828); }
-
         .pin-display { background: linear-gradient(135deg, #2c2c2c, #1e1e1e); border: 2px dashed #ff9800; color: #ffb74d; font-size: 24px; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; letter-spacing: 2px; }
-        
         .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .score-grid-item { background: #2c2c2c; border: 2px solid #0277bd; padding: 10px; border-radius: 10px; }
         .score-grid-item label { display: block; font-weight: bold; color: #81d4fa; margin-bottom: 8px; font-size: 15px; }
         .score-grid-item input { font-size: 22px; color: #ff5252; background-color: #1e1e1e; margin-bottom: 0; }
-
         .score-table, .dyn-table, .pga-table { width: 100%; border-collapse: collapse; font-size: 14px; background: #1e1e1e; table-layout: fixed; }
         .score-table th, .score-table td, .dyn-table th, .dyn-table td, .pga-table th, .pga-table td { border: 1px solid #444; padding: 8px; text-align: center; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; }
         .score-table td:first-child, .score-table th:first-child, .pga-table td:first-child, .pga-table th:first-child { width: 12%; background-color: #2c2c2c; font-weight: bold; position: sticky; left: 0; z-index: 1; border-right: 2px solid #555; }
@@ -57,16 +51,13 @@
         .shape-par { color: #64b5f6; } 
         .shape-bogey { border: 1.5px solid #aaa; color: #aaa; } 
         .shape-double { border: 3.5px double #aaa; color: #aaa; }
-
         .data-table { width: 100%; border-collapse: collapse; font-size: 14px; background: #1e1e1e; color: #fff; margin-bottom: 20px;}
         .data-table th, .data-table td { border: 1px solid #444; padding: 8px; text-align: center; }
         .data-table th { background: linear-gradient(135deg, #0277bd, #01579b); }
         .data-table tr:nth-child(even) { background-color: #252525; }
-
         #miniLoader { position: fixed; top: 15px; right: 15px; background: rgba(30,30,30,0.95); padding: 10px 18px; border-radius: 25px; border: 1px solid #ce93d8; color: #ce93d8; font-size: 14px; font-weight: bold; z-index: 10001; display: none; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
         .mini-genie { display: inline-block; animation: bounce 1s infinite; font-size: 18px; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-        
         .gold-title { font-size: 36px; margin: 0 0 20px 0; background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728); -webkit-background-clip: text; color: transparent; text-shadow: 0px 4px 10px rgba(212, 175, 55, 0.3); letter-spacing: 2px; }
         .premium-card { background: linear-gradient(145deg, #1c1c1c, #121212); border: 1px solid #444; border-radius: 15px; padding: 25px 20px; margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.6); position: relative; overflow: hidden; }
         .premium-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(to right, #ab47bc, #ff9800); }
@@ -77,17 +68,13 @@
         .hl-birdie { border-left-color: #ce93d8; } 
         .hl-eagle { border-left-color: #ffd700; background: linear-gradient(to right, #3e2723, #252525); } 
         .hl-blowup { border-left-color: #e65100; background: linear-gradient(to right, #3e1111, #252525); }
-
         .premium-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 25px; table-layout: fixed; background: #1a1a1a; color: #fff;}
         .premium-table th { background: linear-gradient(135deg, #b38728, #fbf5b7, #aa771c); color: #121212; padding: 8px; border: 1px solid #333; }
         .premium-table td { padding: 8px; border: 1px solid #333; text-align: center; }
         .premium-table tr:nth-child(even) { background-color: #222; }
-        
         .net-input { width: 60px; padding: 5px; font-size: 16px; margin: 0; border: 1px solid #888; background: #333; color: #fff; text-align:center;}
         .dyn-rank-select { width: 23%; font-size: 12px; padding: 6px; border-radius: 4px; border: 1px solid #444; background: #333; color: #fff; }
-        
         .rotate-eng { writing-mode: vertical-rl; transform: rotate(180deg); display: inline-block; white-space: nowrap; margin: auto; padding: 2px 0; }
-
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: none; justify-content: space-around; align-items: center; padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px); border-top: 1px solid #333; z-index: 9999; }
         .bottom-nav button { background: transparent; border: none; color: #777; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; padding: 0; box-shadow: none; margin: 0; transition: color 0.3s; }
         .bottom-nav button.active { color: #ffd700; }
@@ -424,7 +411,7 @@
 
     <script>
         // 💡 替換為您的正式版 API 網址！
-        const gasUrl = "https://script.google.com/macros/s/AKfycbymh6lss_alVcp6-hyrQVFq9l6QJY89hq5oMks5DT7HRwmY9WY0nEwCbt7R5-jixhgE/exec"; 
+        const gasUrl = "https://script.google.com/macros/s/AKfycbwc9NX9ZXOrr9d2QPCLaXkZ-3Qd13v3rAIzXVYiaLYjKmjlQd_q6Oerrup7Q5WjM3zj0Q/exec"; 
         
         let currentPin = ""; 
         let currentTourneyId = ""; 
@@ -629,7 +616,6 @@
             const resReport = await apiCall("createPermanentReport", { pin: currentPin }, true, "產生戰報中...");
             if (resReport && resReport.permId) {
                 
-                // 💡 修改：由於 createPermanentReport 已經備份過，這裡只要直接清除球局即可，避免產生重複存檔的 Bug。
                 await apiCall("deleteRoom", { pin: currentPin }, true, "清理球局緩存..."); 
                 
                 document.getElementById('leaveModal').style.display = 'none';
@@ -980,6 +966,76 @@
             }
         }
 
+        // 💡 修復：重新為這兩個函數注入了各自正確的抓取邏輯
+        async function autoFillHandicaps() { 
+            var btn = document.getElementById("adminAutoFillBtn"); 
+            var orig = btn.innerHTML; 
+            btn.disabled = true; 
+            btn.innerHTML = '<i class="fas fa-hourglass-half"></i> 查詢中...'; 
+            
+            var matchups = []; 
+            var labels = document.querySelectorAll(".setup-handicap-label"); 
+            labels.forEach(lbl => matchups.push(lbl.textContent)); 
+            
+            if (matchups.length === 0) {
+                alert("請先輸入球員名單並更新組合！");
+                btn.disabled = false; 
+                btn.innerHTML = orig; 
+                return;
+            }
+
+            const res = await apiCall("fetchExternalHandicaps", { matchups: matchups }, false, "抓取資料..."); 
+            
+            if (res && res.handicaps) { 
+                var inputs = document.querySelectorAll(".setup-handicap-input"); 
+                var fillCount = 0; 
+                inputs.forEach((input, i) => { 
+                    if (res.handicaps[i] !== "" && res.handicaps[i] !== null) { 
+                        input.value = res.handicaps[i]; 
+                        fillCount++; 
+                    } 
+                }); 
+                if (fillCount === 0) alert("找不到對應的讓桿資料！"); 
+            } 
+            btn.disabled = false; 
+            btn.innerHTML = orig; 
+        }
+
+        async function batchAutoFillHandicaps() { 
+            var btn = document.getElementById("batchAutoFillBtn"); 
+            var orig = btn.innerHTML; 
+            btn.disabled = true; 
+            btn.innerHTML = '<i class="fas fa-hourglass-half"></i> 查詢中...'; 
+            
+            var matchups = []; 
+            var labelElements = document.querySelectorAll(".batch-lbl"); 
+            labelElements.forEach(lbl => matchups.push(lbl.textContent)); 
+            
+            if (matchups.length === 0) {
+                btn.disabled = false; 
+                btn.innerHTML = orig; 
+                return;
+            }
+
+            const res = await apiCall("fetchExternalHandicaps", { matchups: matchups }, false, "抓取資料..."); 
+            
+            if (res && res.handicaps) { 
+                var fillCount = 0; 
+                labelElements.forEach((lbl, i) => { 
+                    let pin = lbl.dataset.pin; 
+                    let idx = lbl.dataset.idx; 
+                    if (res.handicaps[i] !== "" && res.handicaps[i] !== null) { 
+                        document.getElementById(`h_${pin}_${idx}`).value = res.handicaps[i]; 
+                        fillCount++; 
+                    } 
+                }); 
+                if (fillCount === 0) alert("找不到對應的讓桿資料！"); 
+            } 
+            btn.disabled = false; 
+            btn.innerHTML = orig; 
+        }
+
+
         async function loadSetupData() {
             const res = await apiCall("getSetupData", { pin: currentPin }, false, "載入設定..."); if (!res) return;
             
@@ -1013,7 +1069,6 @@
         }
 
         async function refreshSetupMatchups() { let players = []; for(let i=0; i<4; i++) players.push(document.getElementById(`sp_${i}`).value); let initRanks = [ document.getElementById('initRank1').value, document.getElementById('initRank2').value, document.getElementById('initRank3').value, document.getElementById('initRank4').value ]; const res = await apiCall("saveSetupData", { pin: currentPin, players: players, handicaps: [], dynMode: "None", initRank: initRanks }, false, "更新組合..."); if (res) loadSetupData(); }
-        async function autoFillHandicaps() { var btn = document.getElementById("adminAutoFillBtn"); var orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="fas fa-magic"></i> 查詢中...'; var matchups = []; document.querySelectorAll(".setup-handicap-label").forEach(lbl => matchups.push(lbl.textContent)); const res = await apiCall("fetchExternalHandicaps", { matchups: matchups }, false, "抓取資料..."); if (res && res.handicaps) { var fillCount = 0; labelElements.forEach((lbl, i) => { let pin = lbl.dataset.pin; let idx = lbl.dataset.idx; if (res.handicaps[i] !== "" && res.handicaps[i] !== null) { document.getElementById(`h_${pin}_${idx}`).value = res.handicaps[i]; fillCount++; } }); if (fillCount === 0) alert("找不到對應的讓桿資料！"); } btn.disabled = false; btn.innerHTML = orig; }
         async function applyCourse() { let course = document.getElementById('setupCourseSelect').value; let tee = document.getElementById('setupTeeOff').value; let hdcpMode = document.getElementById('setupHdcpMode').value; if(!course && document.getElementById('setupCourseSelect').disabled === false) return alert("請選擇球場"); const res = await apiCall("applyCourseData", { pin: currentPin, courseName: course, teeOff: tee, hdcpMode: hdcpMode, manualPars:[], manualStdHdcp:[] }, false, "套用球場..."); if (res) { alert(res.message); document.getElementById('holeSelect').value = (tee === "IN") ? "10" : "1"; } }
         
         async function saveSetup() { 
@@ -1267,8 +1322,6 @@
                 alert("所有的格子都已經滿囉！");
             }
         }
-
-        async function batchAutoFillHandicaps() { var btn = document.getElementById("batchAutoFillBtn"); var orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="fas fa-magic"></i> 查詢中...'; var matchups = []; var labelElements = document.querySelectorAll(".batch-lbl"); labelElements.forEach(lbl => matchups.push(lbl.textContent)); const res = await apiCall("fetchExternalHandicaps", { matchups: matchups }, false, "抓取資料..."); if (res && res.handicaps) { var fillCount = 0; labelElements.forEach((lbl, i) => { let pin = lbl.dataset.pin; let idx = lbl.dataset.idx; if (res.handicaps[i] !== "" && res.handicaps[i] !== null) { document.getElementById(`h_${pin}_${idx}`).value = res.handicaps[i]; fillCount++; } }); if (fillCount === 0) alert("找不到對應的讓桿資料！"); } btn.disabled = false; btn.innerHTML = orig; }
         
         async function saveBatchSetup() { 
             let resDashboard = await apiCall("getTournamentDashboard", { tourneyId: currentTourneyId }, true, "處理中..."); if(!resDashboard) return; 
@@ -1391,12 +1444,9 @@
             var statsHtml = ""; res.playerStats.forEach(function(p) { var ptsClass = p.matchPts > 0 ? "pts-positive" : (p.matchPts < 0 ? "pts-negative" : "pts-zero"); var sign = p.matchPts > 0 ? "+" : ""; statsHtml += `<div class="stat-row"><div class="stat-name">${p.name}</div><div class="stat-gross">總桿 ${p.grossScore}</div><div class="stat-pts ${ptsClass}">${sign}${p.matchPts}</div></div>`; }); document.getElementById("repStatsList").innerHTML = statsHtml;
             var eaglesHtml = "", birdiesHtml = ""; if (res.highlights.eagles.length > 0) { res.highlights.eagles.forEach(function(e) { eaglesHtml += `<div class="hl-item hl-eagle">🦅 ${e}</div>`; }); } else { eaglesHtml = '<div class="hl-item" style="color:#777;">🦅 尚無老鷹</div>'; } if (res.highlights.birdies.length > 0) { res.highlights.birdies.forEach(function(b) { birdiesHtml += `<div class="hl-item hl-birdie">🕊️ ${b}</div>`; }); } else { birdiesHtml = '<div class="hl-item" style="color:#777;">🕊️ 尚無抓鳥</div>'; } document.getElementById("repEaglesArea").innerHTML = eaglesHtml; document.getElementById("repBirdiesArea").innerHTML = birdiesHtml;
             if (res.highlights.blowUpHole && res.highlights.blowUpHole.hole > 0) { var bh = res.highlights.blowUpHole; document.getElementById("repBlowUpArea").innerHTML = `<span style="font-size: 20px; font-weight:bold;">⛳ 第 ${bh.hole} 洞 (Par ${bh.par})</span><br><span style="color: #ffcc80; font-size:15px; margin-top:5px; display:inline-block;">${bh.desc} ${bh.totalStrokes} 桿 (共超桿 +${bh.overPar})</span>`; } else { document.getElementById("repBlowUpArea").innerHTML = '<span style="color:#777;">戰況膠著，尚未產生魔鬼洞</span>'; }
-            
-            // 💡 修復：在此處確保 DOM 操作被改回原先正確的字串拼接
-            var detailedHtml = ""; if (res.scoreData && res.scoreData.length > 0) { detailedHtml += '<h3 class="pt-title"><i class="fas fa-chart-bar"></i>完整記分卡</h3><div style="overflow-x:auto;"><table class="premium-table">'; var transposed = res.scoreData[0].map(function(c, i) { return res.scoreData.map(function(r) { return r[i]; }); }); transposed.forEach(function(row, rIdx) { if (rIdx === 11) { detailedHtml += '<tr>'; transposed[0].forEach(function(headerCell) { detailedHtml += `<th>${headerCell}</th>`; }); detailedHtml += '</tr>'; } detailedHtml += '<tr>'; var isHoleColumn = (rIdx >= 1 && rIdx <= 9) || (rIdx >= 11 && rIdx <= 19); var parValue = parseInt(row[1]); row.forEach(function(cell, cIdx) { var tag = (rIdx === 0 || cIdx === 0) ? 'th' : 'td'; var style = ""; if (cIdx >= 22 && rIdx !== 0) style = "color:#ff8a80; font-weight:bold;"; if (cIdx === 1 && rIdx !== 0) style = "color:#64b5f6; font-weight:bold;"; if (cIdx === 2 && rIdx !== 0) style = "color:#888;"; var cellContent = cell; if (tag === 'td' && isHoleColumn && cIdx > 2 && cell !== "") { var score = parseInt(cell); if (!isNaN(score) && !isNaN(parValue)) { var diff = score - parValue; var spanClass = "score-box "; if (diff <= -2) spanClass += "shape-eagle"; else if (diff === -1) spanClass += "shape-birdie"; else if (diff === 0) spanClass += "shape-par"; else if (diff === 1) spanClass += "shape-bogey"; else spanClass += "shape-double"; cellContent = `<span class="${spanClass}">${cell}</span>`; } } detailedHtml += `<${tag} style="${style}">${cellContent}</${tag}>`; }); detailedHtml += '</tr>'; }); detailedHtml += '</table></div>'; }
-            
+            var detailedHtml = ""; if (res.scoreData && res.scoreData.length > 0) { detailedHtml += '<h3 class="pt-title"><i class="fas fa-chart-bar"></i> 完整記分卡與讓桿積分</h3><div style="overflow-x:auto;"><table class="premium-table">'; var transposed = res.scoreData[0].map(function(c, i) { return res.scoreData.map(function(r) { return r[i]; }); }); transposed.forEach(function(row, rIdx) { if (rIdx === 11) { detailedHtml += '<tr>'; transposed[0].forEach(function(headerCell) { detailedHtml += `<th>${headerCell}</th>`; }); detailedHtml += '</tr>'; } detailedHtml += '<tr>'; var isHoleColumn = (rIdx >= 1 && rIdx <= 9) || (rIdx >= 11 && rIdx <= 19); var parValue = parseInt(row[1]); row.forEach(function(cell, cIdx) { var tag = (rIdx === 0 || cIdx === 0) ? 'th' : 'td'; var style = ""; if (cIdx >= 22 && rIdx !== 0) style = "color:#ff8a80; font-weight:bold;"; if (cIdx === 1 && rIdx !== 0) style = "color:#64b5f6; font-weight:bold;"; if (cIdx === 2 && rIdx !== 0) style = "color:#888;"; var cellContent = cell; if (tag === 'td' && isHoleColumn && cIdx > 2 && cell !== "") { var score = parseInt(cell); if (!isNaN(score) && !isNaN(parValue)) { var diff = score - parValue; var spanClass = "score-box "; if (diff <= -2) spanClass += "shape-eagle"; else if (diff === -1) spanClass += "shape-birdie"; else if (diff === 0) spanClass += "shape-par"; else if (diff === 1) spanClass += "shape-bogey"; else spanClass += "shape-double"; cellContent = `<span class="${spanClass}">${cell}</span>`; } } detailedHtml += `<${tag} style="${style}">${cellContent}</${tag}>`; }); detailedHtml += '</tr>'; }); detailedHtml += '</table></div>'; }
             if (res.matchData && res.matchData.length > 0) { detailedHtml += '<h3 class="pt-title" style="margin-top:30px;"><i class="fas fa-trophy"></i> 對戰勝負與下回讓桿</h3><div style="overflow-x:auto;"><table class="premium-table"><tr><th style="width:25%;">對戰組合</th><th>讓桿</th><th>前九</th><th>後九</th><th>總和</th><th style="background:linear-gradient(135deg, #0288d1, #01579b); color:white;">下回讓桿</th></tr>'; res.matchData.forEach(function(r) { detailedHtml += `<tr><td style="font-weight:bold;">${r.name}</td><td style="color:#aaa;">${r.hdcp}</td><td>${r.f9}</td><td>${r.b9}</td><td style="color:#ff8a80; font-weight:bold;">${r.all}</td><td style="color:#81d4fa; font-weight:bold;">${r.nextHdcp}</td></tr>`; }); detailedHtml += '</table></div>'; }
-            if (res.dynData && !res.dynData.error) { detailedHtml += `<h3 class="pt-title" style="margin-top:30px;"><i class="fas fa-dice"></i> 🎲 四人遊戲總分 (${res.dynData.mode})</h3><div style="overflow-x:auto;"><table class="premium-table"><tr>`; res.dynData.players.forEach(function(p) { detailedHtml += `<th>${p}</th>`; }); detailedHtml += '</tr><tr>'; res.dynData.players.forEach(function(p) { var tot = res.dynData.finalTotals[p]; var color = tot > 0 ? "#ff5252" : (tot < 0 ? "#81c784" : "#ccc"); var sign = tot > 0 ? "+" : ""; detailedHtml += `<td style="font-weight:bold; font-size:16px; color:${color};">${sign}${tot}</td>`; }); detailedHtml += '</tr></table></div>'; } document.getElementById("repDetailedDataArea").innerHTML = detailedHtml;
+            if (res.dynData && !res.dynData.error) { detailedHtml += `<h3 class="pt-title" style="margin-top:30px;"><i class="fas fa-dice"></i> 四人遊戲總分 (${res.dynData.mode})</h3><div style="overflow-x:auto;"><table class="premium-table"><tr>`; res.dynData.players.forEach(function(p) { detailedHtml += `<th>${p}</th>`; }); detailedHtml += '</tr><tr>'; res.dynData.players.forEach(function(p) { var tot = res.dynData.finalTotals[p]; var color = tot > 0 ? "#ff5252" : (tot < 0 ? "#81c784" : "#ccc"); var sign = tot > 0 ? "+" : ""; detailedHtml += `<td style="font-weight:bold; font-size:16px; color:${color};">${sign}${tot}</td>`; }); detailedHtml += '</tr></table></div>'; } document.getElementById("repDetailedDataArea").innerHTML = detailedHtml;
         }
 
         async function submitEmail() {
