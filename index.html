@@ -1109,18 +1109,10 @@
             if (res) { 
                 localStorage.setItem("sg_super_admin", "true"); 
                 currentTourneyId = res.tourneyId; 
-                let html = ""; 
-                let baseUrl = window.location.origin + window.location.pathname;
-                res.pins.forEach((pin, i) => { 
-                    localStorage.setItem("isCreator_" + pin, "true"); 
-                    localStorage.setItem("current_tourney_" + pin, res.tourneyId); 
-                    let link = baseUrl + "?room=" + pin + "&openExternalBrowser=1"; 
-                    html += `<div style="margin-bottom:10px;"><strong style="color:#ce93d8;">第 ${i+1} 組：</strong> <span style="font-size:20px; color:#fff;">${pin}</span> <br><a href="${link}" target="_blank" style="color:#81d4fa; font-size:12px;">進入記分</a></div>`; 
-                }); 
-                document.getElementById('displayTeamCode').textContent = res.tourneyId; 
-                document.getElementById('tourneyPinsArea').innerHTML = html; 
-                document.getElementById('tourneyDashboardUrl').value = baseUrl + "?liveboard=" + res.tourneyId + "&openExternalBrowser=1"; 
-                navTo('page-tourney-result'); 
+                
+                // 💡 修正：直接引導至全新的「總幹事專頁」，並載入賽事資料
+                alert("🎉 賽事建立成功！為您轉往總幹事專頁...");
+                goToTourneyAdmin(res.tourneyId); 
             } 
         }
 
