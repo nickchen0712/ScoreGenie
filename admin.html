@@ -30,6 +30,7 @@
         button:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(255,215,0,0.3); }
         .btn-blue { background: linear-gradient(135deg, #29b6f6, #0277bd); color: white; box-shadow: 0 4px 10px rgba(41,182,246,0.3);}
         .btn-green { background: linear-gradient(135deg, #43a047, #1b5e20); color: white; }
+        .btn-gray { background: linear-gradient(135deg, #78909c, #37474f); color: white; box-shadow: none; }
         
         input, select { padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid #555; background: #333; color: white; box-sizing: border-box; width: 100%; }
         input:focus, select:focus { outline: none; border-color: #ffd700; }
@@ -45,6 +46,12 @@
         .bottom-nav button { background: transparent; border: none; color: #777; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; padding: 0; box-shadow: none; margin: 0; }
         .bottom-nav button.active { color: #ffd700; }
         .bottom-nav button i { font-size: 24px; margin-bottom: 2px; }
+        
+        .report-item { background: #252525; border: 1px solid #444; padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .report-info { text-align: left; }
+        .report-date { color: #81d4fa; font-size: 13px; font-weight: bold; margin-bottom: 5px; }
+        .report-course { font-size: 16px; color: #fff; font-weight: bold; margin-bottom: 5px; }
+        .report-desc { color: #aaa; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -54,6 +61,7 @@
     <div id="adminNav" class="bottom-nav">
         <button id="navBtnDashboard" onclick="switchView('dashboardView')" class="active"><i class="fas fa-tachometer-alt"></i>戰情雷達</button>
         <button id="navBtnCourse" onclick="switchView('courseView')"><i class="fas fa-flag"></i>球場管理</button>
+        <button id="navBtnArchive" onclick="switchView('archiveView'); loadArchive();"><i class="fas fa-book"></i>歷史戰報</button>
     </div>
 
     <div id="loginView" class="container active-view" style="text-align:center; max-width: 400px; margin-top: 15vh;">
@@ -68,7 +76,7 @@
     <div id="dashboardView" class="container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px dashed #444; padding-bottom: 15px; flex-wrap: wrap; gap: 10px;">
             <h1 style="margin:0; font-size:28px;"><i class="fas fa-crown"></i> 營運總部</h1>
-            <button onclick="loadDashboard()" class="btn-blue" style="margin:0;"><i class="fas fa-sync-alt"></i> 更新雷達</button>
+            <button onclick="loadDashboard()" class="btn-blue" style="margin:0; padding:8px 15px; font-size:14px;"><i class="fas fa-sync-alt"></i> 更新雷達</button>
         </div>
 
         <div class="grid">
@@ -115,13 +123,33 @@
             <div class="table-container" style="margin-bottom: 20px; max-height: none;">
                 <table id="courseGridTable">
                     <thead><tr><th style="width:20%;">洞號</th><th style="width:40%;">Par (3~6)</th><th style="width:40%;">HDCP (1~18)</th></tr></thead>
-                    <tbody id="courseHolesBody">
-                        </tbody>
+                    <tbody id="courseHolesBody"></tbody>
                 </table>
             </div>
 
             <button onclick="submitNewCourse()" class="btn-green" style="width:100%;"><i class="fas fa-save"></i> 儲存球場資料</button>
             <button onclick="document.getElementById('newCourseName').value=''; buildCourseGrid();" class="btn-gray" style="width:100%;"><i class="fas fa-eraser"></i> 清空重填</button>
+        </div>
+    </div>
+
+    <div id="archiveView" class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px dashed #444; padding-bottom: 15px;">
+            <h1 style="margin:0; font-size:28px;"><i class="fas fa-book"></i> 歷史戰報檔案庫</h1>
+            <button onclick="loadArchive()" class="btn-blue" style="margin:0; padding:8px 15px; font-size:14px;"><i class="fas fa-sync-alt"></i> 重新載入</button>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3 style="color:#ffd700;"><i class="fas fa-trophy"></i> 球隊賽事紀錄</h3>
+                <p style="font-size:12px; color:#aaa; margin-top:-5px;">已封存的 Team Tournaments</p>
+                <div id="archiveTeamList" style="margin-top: 15px;">載入中...</div>
+            </div>
+
+            <div class="card">
+                <h3 style="color:#81c784;"><i class="fas fa-flag-checkered"></i> 單局戰報紀錄</h3>
+                <p style="font-size:12px; color:#aaa; margin-top:-5px;">已封存的 Single Games</p>
+                <div id="archiveSingleList" style="margin-top: 15px;">載入中...</div>
+            </div>
         </div>
     </div>
 
@@ -153,7 +181,7 @@
                 document.getElementById('adminNav').style.display = 'flex';
                 switchView('dashboardView');
                 loadDashboard();
-                buildCourseGrid(); // 準備好球場的輸入表格
+                buildCourseGrid();
             } else {
                 alert("密碼錯誤！");
                 document.getElementById('adminPwd').value = "";
@@ -167,8 +195,12 @@
             
             if(viewId === 'dashboardView') document.getElementById('navBtnDashboard').classList.add('active');
             if(viewId === 'courseView') document.getElementById('navBtnCourse').classList.add('active');
+            if(viewId === 'archiveView') document.getElementById('navBtnArchive').classList.add('active');
         }
 
+        // ==========================
+        // 雷達與開通碼邏輯
+        // ==========================
         async function loadDashboard() {
             const res = await apiCall("getSuperAdminDashboard", {});
             if (!res) return;
@@ -176,14 +208,12 @@
             let tourneys = res.tourneys || []; let rooms = res.rooms || []; let codes = res.codes || [];
             let now = new Date().getTime();
 
-            // 1. 下拉選單
             let targetSelect = document.getElementById('passCodeTarget');
             let optionsHtml = `<option value="ALL">通用 (不綁定球局)</option>`;
             tourneys.sort((a,b) => b.date - a.date).forEach(t => { optionsHtml += `<option value="${t.id}">🏆 賽事: ${t.id} (${t.course})</option>`; });
             rooms.sort((a,b) => b.timestamp - a.timestamp).forEach(r => { if(!r.tourneyId) optionsHtml += `<option value="${r.pin}">⛳ 單局: ${r.pin} (${r.course || '未設定'})</option>`; });
             targetSelect.innerHTML = optionsHtml;
 
-            // 2. 開通碼
             let cHtml = "";
             codes.sort((a,b) => b.createdAt - a.createdAt).forEach(c => {
                 let isExpired = c.expireAt && now > c.expireAt && c.status === 'active';
@@ -197,7 +227,6 @@
             });
             document.querySelector('#codesTable tbody').innerHTML = cHtml || "<tr><td colspan='4' style='text-align:center;'>目前金庫空空如也！</td></tr>";
 
-            // 3. 雷達
             let rHtml = "";
             tourneys.sort((a,b) => b.date - a.date).forEach(t => { rHtml += `<tr><td style="color:#ffd700; font-weight:bold;">🏆賽事(${t.pins.length}組)</td><td style="font-weight:bold; color:#ce93d8;">${t.id}</td><td>${t.course}</td><td>-</td></tr>`; });
             rooms.sort((a,b) => b.timestamp - a.timestamp).forEach(r => { if(r.tourneyId) return; let prem = r.isPremium ? "✅ 尊榮" : "❌ 一般"; rHtml += `<tr><td style="color:#81c784; font-weight:bold;">⛳單局</td><td style="font-weight:bold; color:#81d4fa;">${r.pin}</td><td>${r.course || '未設定'}</td><td>${prem}</td></tr>`; });
@@ -217,7 +246,7 @@
         function copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => { alert("✅ 已複製開通碼：" + text); }).catch(err => { prompt("請手動複製：", text); }); }
 
         // ==========================
-        // ⛳ 球場管理邏輯
+        // 球場管理邏輯
         // ==========================
         function buildCourseGrid() {
             let html = "";
@@ -234,21 +263,14 @@
         async function submitNewCourse() {
             let name = document.getElementById('newCourseName').value.trim();
             if(!name) return alert("請輸入球場名稱！");
-            
-            let pars = [];
-            let hdcps = [];
-            let hasError = false;
-
+            let pars = [], hdcps = [], hasError = false;
             for(let i=1; i<=18; i++) {
                 let p = parseInt(document.getElementById(`cp_${i}`).value);
                 let h = parseInt(document.getElementById(`ch_${i}`).value);
                 if(isNaN(p) || isNaN(h)) hasError = true;
-                pars.push(p);
-                hdcps.push(h);
+                pars.push(p); hdcps.push(h);
             }
-
             if(hasError) return alert("請確認 18 洞的 Par 和 HDCP 都有輸入數字！");
-
             if(!confirm(`確定要儲存球場「${name}」嗎？\n(若名稱已存在將會直接更新資料)`)) return;
 
             const res = await apiCall("addCustomCourse", { courseName: name, pars: pars, hdcps: hdcps });
@@ -258,6 +280,55 @@
                 buildCourseGrid();
             }
         }
+
+        // ==========================
+        // 💡 歷史戰報邏輯
+        // ==========================
+        async function loadArchive() {
+            const res = await apiCall("getArchivedReports", {});
+            if (!res) return;
+
+            let baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html'); // 自動對應正式版首頁
+
+            // 渲染球隊賽事
+            let tHtml = "";
+            if(res.teamReports.length > 0) {
+                res.teamReports.forEach(r => {
+                    let dStr = new Date(r.date).toLocaleDateString('zh-TW');
+                    let link = `${baseUrl}?treport=${r.reportId}&openExternalBrowser=1`;
+                    tHtml += `
+                    <div class="report-item">
+                        <div class="report-info">
+                            <div class="report-date">${dStr}</div>
+                            <div class="report-course">${r.course}</div>
+                            <div class="report-desc">共 ${r.playerCount} 人參賽</div>
+                        </div>
+                        <button onclick="window.open('${link}', '_blank')" class="btn-blue" style="margin:0; padding:10px; font-size:14px;"><i class="fas fa-search"></i> 查看</button>
+                    </div>`;
+                });
+            } else { tHtml = "<p style='color:#777; text-align:center;'>尚無球隊賽事紀錄</p>"; }
+            document.getElementById('archiveTeamList').innerHTML = tHtml;
+
+            // 渲染單局戰報
+            let sHtml = "";
+            if(res.singleReports.length > 0) {
+                res.singleReports.forEach(r => {
+                    let dStr = new Date(r.date).toLocaleDateString('zh-TW');
+                    let link = `${baseUrl}?report=${r.reportId}&openExternalBrowser=1`;
+                    sHtml += `
+                    <div class="report-item">
+                        <div class="report-info">
+                            <div class="report-date">${dStr}</div>
+                            <div class="report-course">${r.course}</div>
+                            <div class="report-desc" style="max-width: 180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.players}</div>
+                        </div>
+                        <button onclick="window.open('${link}', '_blank')" class="btn-gray" style="margin:0; padding:10px; font-size:14px;"><i class="fas fa-search"></i> 查看</button>
+                    </div>`;
+                });
+            } else { sHtml = "<p style='color:#777; text-align:center;'>尚無單局戰報紀錄</p>"; }
+            document.getElementById('archiveSingleList').innerHTML = sHtml;
+        }
+
     </script>
 </body>
 </html>
