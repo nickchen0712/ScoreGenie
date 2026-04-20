@@ -378,8 +378,18 @@
             <div id="premiumSettingsArea" style="display:none;">
                 <h4 style="margin: 10px 0; color: #ce93d8; border-top: 1px dashed #444; padding-top:15px;"><i class="fas fa-crown"></i> 3. 四人遊戲 (尊榮限定)</h4>
                 <select id="dynGameMode" style="margin-bottom: 10px;">
-                    <option value="None">無</option><option value="LasVegas">Las Vegas</option><option value="HighLow">High-Low</option><option value="HighLowTotal">High-Low-Total</option><option value="8421">8421 點數制</option>
-                </select>
+                    <option value="None">無</option>
+                    <optgroup label="四人遊戲">
+                    <option value="LasVegas">Las Vegas</option>
+                    <option value="HighLow">High-Low</option>
+                    <option value="HighLowTotal">High-Low-Total</option>
+                    <option value="8421">8421 點數制</option>
+                    </optgroup>
+                    <optgroup label="三人遊戲">
+                    <option value="Big2_Points">Big 2 (桿數制)</option>
+                    <option value="Big2_8421">Big 2 (8421制)</option>
+                    </optgroup>
+               </select>
                 <label style="display:block; text-align:left; font-size:14px; color:#aaa; margin-bottom:5px;">第一洞預設排序 (1st -> 4th)：</label>
                 <div style="display:flex; justify-content:space-between; margin-bottom: 20px;">
                     <select id="initRank1" class="dyn-rank-select"></select><select id="initRank2" class="dyn-rank-select"></select><select id="initRank3" class="dyn-rank-select"></select><select id="initRank4" class="dyn-rank-select"></select>
