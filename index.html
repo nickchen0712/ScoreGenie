@@ -15,8 +15,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body, html { margin: 0; padding: 0; min-height: 100%; width: 100%; background-color: #0a0a0a; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; }
-        .page-container { display: none; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; padding-bottom: 90px !important; box-sizing: border-box; }
+        
+        /* 💡 調整 page-container 底部留白，容納導覽列 + 廣告 */
+        .page-container { display: none; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; padding-bottom: 130px !important; box-sizing: border-box; }
         .active-page { display: flex; }
+        
         h1, h2, h3, h4 { color: #ffffff; } p { color: #aaa; margin: 0 0 25px 0; font-size: 16px; }
         .card { background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); max-width: 450px; width: 100%; border: 1px solid #333; box-sizing: border-box; margin: auto; }
         select, input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; background-color: #2c2c2c; color: #ffffff; border: 1px solid #444; border-radius: 8px; font-size: 16px; box-sizing: border-box; text-align: center; }
@@ -24,6 +27,7 @@
         button { width: 100%; padding: 15px; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px; transition: all 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; gap: 8px;}
         button:active { transform: translateY(2px); box-shadow: 0 2px 3px rgba(0,0,0,0.2); }
         button:disabled { background: #555 !important; color: #888 !important; cursor: not-allowed; }
+        
         .btn-purple { background: linear-gradient(135deg, #ab47bc, #6a1b9a); } 
         .btn-green { background: linear-gradient(135deg, #43a047, #1b5e20); } 
         .btn-orange { background: linear-gradient(135deg, #ffa726, #e65100); } 
@@ -31,11 +35,14 @@
         .btn-gray { background: linear-gradient(135deg, #78909c, #37474f); } 
         .btn-gold { background: linear-gradient(135deg, #ffd700, #ffb300); color: #3e2723; } 
         .btn-red { background: linear-gradient(135deg, #ef5350, #c62828); }
+
         .pin-display { background: linear-gradient(135deg, #2c2c2c, #1e1e1e); border: 2px dashed #ff9800; color: #ffb74d; font-size: 24px; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; letter-spacing: 2px; }
+        
         .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .score-grid-item { background: #2c2c2c; border: 2px solid #0277bd; padding: 10px; border-radius: 10px; }
         .score-grid-item label { display: block; font-weight: bold; color: #81d4fa; margin-bottom: 8px; font-size: 15px; }
         .score-grid-item input { font-size: 22px; color: #ff5252; background-color: #1e1e1e; margin-bottom: 0; }
+
         .score-table, .dyn-table, .pga-table { width: 100%; border-collapse: collapse; font-size: 14px; background: #1e1e1e; table-layout: fixed; }
         .score-table th, .score-table td, .dyn-table th, .dyn-table td, .pga-table th, .pga-table td { border: 1px solid #444; padding: 8px; text-align: center; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; }
         .score-table td:first-child, .score-table th:first-child, .pga-table td:first-child, .pga-table th:first-child { width: 12%; background-color: #2c2c2c; font-weight: bold; position: sticky; left: 0; z-index: 1; border-right: 2px solid #555; }
@@ -51,13 +58,16 @@
         .shape-par { color: #64b5f6; } 
         .shape-bogey { border: 1.5px solid #aaa; color: #aaa; } 
         .shape-double { border: 3.5px double #aaa; color: #aaa; }
+
         .data-table { width: 100%; border-collapse: collapse; font-size: 14px; background: #1e1e1e; color: #fff; margin-bottom: 20px;}
         .data-table th, .data-table td { border: 1px solid #444; padding: 8px; text-align: center; }
         .data-table th { background: linear-gradient(135deg, #0277bd, #01579b); }
         .data-table tr:nth-child(even) { background-color: #252525; }
+
         #miniLoader { position: fixed; top: 15px; right: 15px; background: rgba(30,30,30,0.95); padding: 10px 18px; border-radius: 25px; border: 1px solid #ce93d8; color: #ce93d8; font-size: 14px; font-weight: bold; z-index: 10001; display: none; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
         .mini-genie { display: inline-block; animation: bounce 1s infinite; font-size: 18px; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        
         .gold-title { font-size: 36px; margin: 0 0 20px 0; background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728); -webkit-background-clip: text; color: transparent; text-shadow: 0px 4px 10px rgba(212, 175, 55, 0.3); letter-spacing: 2px; }
         .premium-card { background: linear-gradient(145deg, #1c1c1c, #121212); border: 1px solid #444; border-radius: 15px; padding: 25px 20px; margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.6); position: relative; overflow: hidden; }
         .premium-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(to right, #ab47bc, #ff9800); }
@@ -68,18 +78,26 @@
         .hl-birdie { border-left-color: #ce93d8; } 
         .hl-eagle { border-left-color: #ffd700; background: linear-gradient(to right, #3e2723, #252525); } 
         .hl-blowup { border-left-color: #e65100; background: linear-gradient(to right, #3e1111, #252525); }
+
         .premium-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 25px; table-layout: fixed; background: #1a1a1a; color: #fff;}
         .premium-table th { background: linear-gradient(135deg, #b38728, #fbf5b7, #aa771c); color: #121212; padding: 8px; border: 1px solid #333; }
         .premium-table td { padding: 8px; border: 1px solid #333; text-align: center; }
         .premium-table tr:nth-child(even) { background-color: #222; }
+        
         .net-input { width: 60px; padding: 5px; font-size: 16px; margin: 0; border: 1px solid #888; background: #333; color: #fff; text-align:center;}
         .dyn-rank-select { width: 23%; font-size: 12px; padding: 6px; border-radius: 4px; border: 1px solid #444; background: #333; color: #fff; }
+        
         .rotate-eng { writing-mode: vertical-rl; transform: rotate(180deg); display: inline-block; white-space: nowrap; margin: auto; padding: 2px 0; }
+
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: none; justify-content: space-around; align-items: center; padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px); border-top: 1px solid #333; z-index: 9999; }
         .bottom-nav button { background: transparent; border: none; color: #777; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; padding: 0; box-shadow: none; margin: 0; transition: color 0.3s; }
         .bottom-nav button.active { color: #ffd700; }
         .bottom-nav button i { font-size: 24px; font-style: normal; margin-bottom: 2px; transition: transform 0.2s; }
         .bottom-nav button.active i { transform: scale(1.15); filter: drop-shadow(0px 0px 5px rgba(255,215,0,0.5)); }
+
+        /* 💡 廣告版位 CSS */
+        .ad-banner-container { position: fixed; bottom: 60px; left: 0; width: 100%; height: 50px; background: #1a1a1a; border-top: 1px solid #333; border-bottom: 1px solid #000; z-index: 9998; display: flex; justify-content: center; align-items: center; color: #666; font-size: 12px; font-family: monospace; letter-spacing: 1px;}
+        .premium-hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -88,6 +106,10 @@
         <button id="navBtnMain" onclick="if(currentPin){ navTo('page-main'); refreshMainBoard(); } else { alert('請先從大廳或總幹事專頁進入一組記分板！'); }"><i class="fas fa-edit"></i>記分板</button>
         <button id="navBtnLive" onclick="loadLiveboard(currentTourneyId)"><i class="fas fa-trophy"></i>即時成績</button>
         <button id="navBtnAdmin" onclick="goToTourneyAdmin(currentTourneyId)"><i class="fas fa-crown"></i>總幹事</button>
+    </div>
+
+    <div id="adBannerWrapper" class="ad-banner-container">
+        <span>[ 廣告版位 Placeholder ]</span>
     </div>
 
     <div id="miniLoader"><span class="mini-genie">🧞‍♂️</span> <span id="miniLoaderText">處理中...</span></div>
@@ -180,6 +202,7 @@
             
             <div id="adminPremiumUnlockBox" style="background:#1e1e1e; padding:15px; border-radius:12px; border:2px dashed #ffd700; margin-bottom:15px; display:none;">
                 <p style="color:#ffd700; margin:0 0 10px 0; font-weight:bold; font-size:14px;"><i class="fas fa-sparkles"></i> 升級賽事為尊榮版</p>
+                <p style="font-size:12px; color:#aaa; margin-top:0;">移除底部廣告，並解鎖四人遊戲與尊榮戰報！</p>
                 <div style="display:flex; gap:10px;">
                     <input type="text" id="adminUnlockCodeInput" placeholder="輸入 Pass Code" style="margin:0; text-transform:uppercase; font-weight:bold; letter-spacing:2px; font-size:14px; padding:8px;">
                     <button onclick="submitAdminUnlockCode()" class="btn-gold" style="margin:0; width:100px; padding:8px; font-size:14px;">解鎖全場</button>
@@ -311,7 +334,7 @@
                 <div style="overflow-x: auto;"><table id="scoreTable" class="score-table"></table></div>
                 <button type="button" onclick="closeScorecard()" class="btn-gray" style="margin-top:10px;">隱藏記分卡</button>
                 
-                <button type="button" onclick="loadMatchData()" class="btn-orange premium-btn" style="margin-top: 10px;" id="btnLoadMatch"><i class="fas fa-trophy"></i> 查看對戰成績</button>
+                <button type="button" onclick="loadMatchData()" class="btn-orange" style="margin-top: 10px;" id="btnLoadMatch"><i class="fas fa-trophy"></i> 查看對戰成績</button>
                 <button type="button" onclick="loadDynamicGame()" class="btn-purple premium-btn" style="margin-top: 10px;" id="btnLoadDyn"><i class="fas fa-dice"></i> 查看四人遊戲戰況</button>
                 <div id="matchArea" style="display:none; margin-top: 15px;">
                     <table id="matchTable" class="score-table"><thead><tr><th style="background-color: #e65100;">對戰組合</th><th style="background-color: #e65100;">讓桿</th><th style="background-color: #ef6c00;">前九</th><th style="background-color: #ef6c00;">後九</th><th style="background-color: #e65100;">總和</th><th style="background-color: #0288d1;">下回讓桿</th></tr></thead><tbody></tbody></table>
@@ -327,7 +350,7 @@
             
             <div id="premiumUnlockBox" style="background:#1e1e1e; padding:20px; border-radius:12px; border:2px solid #ffd700; margin-bottom:25px; display:none;">
                 <h3 style="color:#ffd700; margin:0 0 5px 0;"><i class="fas fa-sparkles"></i> 升級尊榮版</h3>
-                <p style="font-size:12px; color:#aaa; margin-bottom:15px;">解鎖對戰讓桿、四人遊戲與尊榮戰報！</p>
+                <p style="font-size:12px; color:#aaa; margin-bottom:15px;">解鎖四人遊戲、尊榮戰報，並移除所有廣告！</p>
                 <div style="display:flex; gap:10px;">
                     <input type="text" id="unlockCodeInput" placeholder="輸入開通碼" style="margin:0; text-transform:uppercase; font-weight:bold; letter-spacing:2px;">
                     <button onclick="submitUnlockCode()" class="btn-gold" style="margin:0; width:100px; padding:10px; font-size:14px;">解鎖</button>
@@ -348,12 +371,12 @@
             <div id="setupPlayers" style="margin-bottom: 20px;"></div>
             <button onclick="refreshSetupMatchups()" class="btn-blue" style="margin-bottom: 20px;"><i class="fas fa-sync-alt"></i> 確認名單並更新組合</button>
             
+            <h4 style="margin: 10px 0; color: #ffcc80; border-top: 1px dashed #444; padding-top:15px;">2. 對戰讓桿 (免費開放)</h4>
+            <button id="adminAutoFillBtn" onclick="autoFillHandicaps()" class="btn-purple" style="display:none; margin-bottom: 10px;"><i class="fas fa-magic"></i> 從 2026 表格自動帶入</button>
+            <div id="setupHandicaps" style="margin-bottom: 20px;"></div>
+            
             <div id="premiumSettingsArea" style="display:none;">
-                <h4 style="margin: 10px 0; color: #ffcc80;">2. 對戰讓桿</h4>
-                <button id="adminAutoFillBtn" onclick="autoFillHandicaps()" class="btn-purple" style="display:none; margin-bottom: 10px;"><i class="fas fa-magic"></i> 從 2026 表格自動帶入</button>
-                <div id="setupHandicaps" style="margin-bottom: 20px;"></div>
-                
-                <h4 style="margin: 10px 0; color: #ce93d8; border-top: 1px dashed #444; padding-top:15px;">3. 四人遊戲</h4>
+                <h4 style="margin: 10px 0; color: #ce93d8; border-top: 1px dashed #444; padding-top:15px;"><i class="fas fa-crown"></i> 3. 四人遊戲 (尊榮限定)</h4>
                 <select id="dynGameMode" style="margin-bottom: 10px;">
                     <option value="None">無</option><option value="LasVegas">Las Vegas</option><option value="HighLow">High-Low</option><option value="HighLowTotal">High-Low-Total</option><option value="8421">8421 點數制</option>
                 </select>
@@ -410,7 +433,6 @@
     </div>
 
     <script>
-        // 💡 替換為您的正式版 API 網址！
         const gasUrl = "https://script.google.com/macros/s/AKfycbymh6lss_alVcp6-hyrQVFq9l6QJY89hq5oMks5DT7HRwmY9WY0nEwCbt7R5-jixhgE/exec"; 
         
         let currentPin = ""; 
@@ -648,11 +670,24 @@
             window.location.href = '?'; 
         }
 
+        // 💡 修正：更新廣告顯示邏輯
+        function togglePremiumUI(isPremium) {
+            currentRoomIsPremium = isPremium;
+            let adBanner = document.getElementById('adBannerWrapper');
+            if (adBanner) {
+                if (isPremium) {
+                    adBanner.classList.add('premium-hidden');
+                } else {
+                    adBanner.classList.remove('premium-hidden');
+                }
+            }
+        }
+
         async function refreshMainBoard() {
             const res = await apiCall("getPlayers", { pin: currentPin }, false, "同步資料...");
             if (!res) return; 
             
-            currentRoomIsPremium = res.isPremium; 
+            togglePremiumUI(res.isPremium);
             
             let html = "";
             res.players.forEach((p, i) => { 
@@ -687,7 +722,8 @@
             }
 
             renderQuickDynGame(res.dynData);
-            renderQuickMatch(res.matchData, res.isPremium);
+            // 💡 比桿對戰現在所有人都看得到
+            renderQuickMatch(res.matchData, true);
         }
 
         async function syncAllResults(silent = false) {
@@ -706,7 +742,7 @@
                 if (document.getElementById("dynGameModal").style.display === "block" && !data.dynGame.error) renderDynGameContent(data.dynGame);
                 
                 if (data.dynGame && !data.dynGame.error) renderQuickDynGame(data.dynGame);
-                if (data.match && data.match.length > 0) renderQuickMatch(data.match, currentRoomIsPremium);
+                if (data.match && data.match.length > 0) renderQuickMatch(data.match, true);
             }
         }
 
@@ -763,9 +799,10 @@
             view.innerHTML = `<h4 style="margin:0 0 10px 0; color:#ce93d8;"><i class="fas fa-dice"></i> 四人遊戲 (${res.mode})</h4>` + nextRankHtml + ptsHtml + totalsHtml; view.style.display = 'block';
         }
 
+        // 💡 比桿對戰 UI 改為永遠顯示 (如果有資料)
         function renderQuickMatch(matchData, isPremium) {
             let view = document.getElementById('quickMatchView'); 
-            if (!isPremium || !matchData || matchData.length === 0) { 
+            if (!matchData || matchData.length === 0) { 
                 view.style.display = 'none'; 
                 return; 
             }
@@ -966,7 +1003,44 @@
             }
         }
 
-        // 💡 修復：重新為這兩個函數注入了各自正確的抓取邏輯
+        async function loadSetupData() {
+            const res = await apiCall("getSetupData", { pin: currentPin }, false, "載入設定..."); if (!res) return;
+            
+            togglePremiumUI(res.isPremium);
+
+            if (res.isPremium) {
+                document.getElementById('premiumUnlockBox').style.display = 'none';
+                document.getElementById('premiumBadge').style.display = 'block';
+                document.getElementById('premiumSettingsArea').style.display = 'block';
+            } else {
+                document.getElementById('premiumUnlockBox').style.display = 'block';
+                document.getElementById('premiumBadge').style.display = 'none';
+                document.getElementById('premiumSettingsArea').style.display = 'none';
+            }
+
+            if (res.isCourseLocked) { document.getElementById('setupCourseSelect').disabled = true; document.getElementById('setupCourseSelect').innerHTML = `<option value="${res.courseName}">${res.courseInfo} (總幹事已鎖定)</option>`; } else { document.getElementById('setupCourseSelect').disabled = false; document.getElementById('setupCourseSelect').value = res.courseName || ""; }
+            document.getElementById('setupTeeOff').value = res.teeOff || "OUT"; document.getElementById('setupHdcpMode').value = res.hdcpMode || "1";
+            let html = ""; for(let i=0; i<4; i++) html += `<input type="text" id="sp_${i}" value="${res.players[i] || ''}" placeholder="球員 ${i+1} 姓名">`; document.getElementById('setupPlayers').innerHTML = html;
+            let hHtml = ""; res.handicaps.forEach(item => { hHtml += `<div style="margin-bottom:10px; text-align:left;"><label class="setup-handicap-label" style="display:block; font-weight:bold; font-size:14px; color:#81d4fa;">${item.name}</label><input type="number" step="0.5" value="${item.val}" data-original-index="${item.index}" class="setup-handicap-input"></div>`; }); document.getElementById('setupHandicaps').innerHTML = hHtml; document.getElementById('dynGameMode').value = res.dynMode || "None";
+            let validPlayers = res.players.filter(String); for(let i=1; i<=4; i++) { let sel = document.getElementById('initRank' + i); sel.innerHTML = ""; validPlayers.forEach(p => { sel.innerHTML += `<option value="${p}">${p}</option>`; }); if(res.initRank && res.initRank[i-1] && validPlayers.includes(res.initRank[i-1])) sel.value = res.initRank[i-1]; else if(validPlayers[i-1]) sel.value = validPlayers[i-1]; }
+            
+            if (document.getElementById('setupHoleOrder')) {
+                document.getElementById('setupHoleOrder').value = res.customHoleOrderStr || "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18";
+            }
+
+            let isCreator = localStorage.getItem("isCreator_" + currentPin) === "true"; 
+            let isSuperAdmin = localStorage.getItem("sg_super_admin") === "true"; 
+            
+            // 💡 修正：管理員自動帶入按鈕現在永遠顯示 (只要有權限)
+            if (isAdminAuth(currentPin) || isCreator || isSuperAdmin) {
+                document.getElementById('adminAutoFillBtn').style.display = 'inline-block'; 
+            } else {
+                document.getElementById('adminAutoFillBtn').style.display = 'none'; 
+            }
+        }
+
+        async function refreshSetupMatchups() { let players = []; for(let i=0; i<4; i++) players.push(document.getElementById(`sp_${i}`).value); let initRanks = [ document.getElementById('initRank1').value, document.getElementById('initRank2').value, document.getElementById('initRank3').value, document.getElementById('initRank4').value ]; const res = await apiCall("saveSetupData", { pin: currentPin, players: players, handicaps: [], dynMode: "None", initRank: initRanks }, false, "更新組合..."); if (res) loadSetupData(); }
+        
         async function autoFillHandicaps() { 
             var btn = document.getElementById("adminAutoFillBtn"); 
             var orig = btn.innerHTML; 
@@ -1035,40 +1109,6 @@
             btn.innerHTML = orig; 
         }
 
-
-        async function loadSetupData() {
-            const res = await apiCall("getSetupData", { pin: currentPin }, false, "載入設定..."); if (!res) return;
-            
-            if (res.isPremium) {
-                document.getElementById('premiumUnlockBox').style.display = 'none';
-                document.getElementById('premiumBadge').style.display = 'block';
-                document.getElementById('premiumSettingsArea').style.display = 'block';
-            } else {
-                document.getElementById('premiumUnlockBox').style.display = 'block';
-                document.getElementById('premiumBadge').style.display = 'none';
-                document.getElementById('premiumSettingsArea').style.display = 'none';
-            }
-
-            if (res.isCourseLocked) { document.getElementById('setupCourseSelect').disabled = true; document.getElementById('setupCourseSelect').innerHTML = `<option value="${res.courseName}">${res.courseInfo} (總幹事已鎖定)</option>`; } else { document.getElementById('setupCourseSelect').disabled = false; document.getElementById('setupCourseSelect').value = res.courseName || ""; }
-            document.getElementById('setupTeeOff').value = res.teeOff || "OUT"; document.getElementById('setupHdcpMode').value = res.hdcpMode || "1";
-            let html = ""; for(let i=0; i<4; i++) html += `<input type="text" id="sp_${i}" value="${res.players[i] || ''}" placeholder="球員 ${i+1} 姓名">`; document.getElementById('setupPlayers').innerHTML = html;
-            let hHtml = ""; res.handicaps.forEach(item => { hHtml += `<div style="margin-bottom:10px; text-align:left;"><label class="setup-handicap-label" style="display:block; font-weight:bold; font-size:14px; color:#81d4fa;">${item.name}</label><input type="number" step="0.5" value="${item.val}" data-original-index="${item.index}" class="setup-handicap-input"></div>`; }); document.getElementById('setupHandicaps').innerHTML = hHtml; document.getElementById('dynGameMode').value = res.dynMode || "None";
-            let validPlayers = res.players.filter(String); for(let i=1; i<=4; i++) { let sel = document.getElementById('initRank' + i); sel.innerHTML = ""; validPlayers.forEach(p => { sel.innerHTML += `<option value="${p}">${p}</option>`; }); if(res.initRank && res.initRank[i-1] && validPlayers.includes(res.initRank[i-1])) sel.value = res.initRank[i-1]; else if(validPlayers[i-1]) sel.value = validPlayers[i-1]; }
-            
-            if (document.getElementById('setupHoleOrder')) {
-                document.getElementById('setupHoleOrder').value = res.customHoleOrderStr || "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18";
-            }
-
-            let isCreator = localStorage.getItem("isCreator_" + currentPin) === "true"; 
-            let isSuperAdmin = localStorage.getItem("sg_super_admin") === "true"; 
-            if (isAdminAuth(currentPin) || isCreator || isSuperAdmin) {
-                document.getElementById('adminAutoFillBtn').style.display = 'inline-block'; 
-            } else {
-                document.getElementById('adminAutoFillBtn').style.display = 'none'; 
-            }
-        }
-
-        async function refreshSetupMatchups() { let players = []; for(let i=0; i<4; i++) players.push(document.getElementById(`sp_${i}`).value); let initRanks = [ document.getElementById('initRank1').value, document.getElementById('initRank2').value, document.getElementById('initRank3').value, document.getElementById('initRank4').value ]; const res = await apiCall("saveSetupData", { pin: currentPin, players: players, handicaps: [], dynMode: "None", initRank: initRanks }, false, "更新組合..."); if (res) loadSetupData(); }
         async function applyCourse() { let course = document.getElementById('setupCourseSelect').value; let tee = document.getElementById('setupTeeOff').value; let hdcpMode = document.getElementById('setupHdcpMode').value; if(!course && document.getElementById('setupCourseSelect').disabled === false) return alert("請選擇球場"); const res = await apiCall("applyCourseData", { pin: currentPin, courseName: course, teeOff: tee, hdcpMode: hdcpMode, manualPars:[], manualStdHdcp:[] }, false, "套用球場..."); if (res) { alert(res.message); document.getElementById('holeSelect').value = (tee === "IN") ? "10" : "1"; } }
         
         async function saveSetup() { 
@@ -1080,8 +1120,10 @@
             let initRanks = [ document.getElementById('initRank1').value, document.getElementById('initRank2').value, document.getElementById('initRank3').value, document.getElementById('initRank4').value ]; 
             let holeOrderStr = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18";
             
+            // 💡 修正：對戰讓桿不再受限於付費區塊
+            document.querySelectorAll(".setup-handicap-input").forEach(input => { hdcpObjects.push({ index: parseInt(input.dataset.originalIndex), val: input.value }); }); 
+            
             if (document.getElementById('premiumSettingsArea').style.display !== 'none') {
-                document.querySelectorAll(".setup-handicap-input").forEach(input => { hdcpObjects.push({ index: parseInt(input.dataset.originalIndex), val: input.value }); }); 
                 dynMode = document.getElementById('dynGameMode').value; 
                 if(document.getElementById('setupHoleOrder')) holeOrderStr = document.getElementById('setupHoleOrder').value;
             }
@@ -1109,8 +1151,6 @@
             if (res) { 
                 localStorage.setItem("sg_super_admin", "true"); 
                 currentTourneyId = res.tourneyId; 
-                
-                // 💡 修正：直接引導至全新的「總幹事專頁」，並載入賽事資料
                 alert("🎉 賽事建立成功！為您轉往總幹事專頁...");
                 goToTourneyAdmin(res.tourneyId); 
             } 
@@ -1431,13 +1471,27 @@
             document.getElementById("repCourseDate").textContent = "🏟️ " + res.courseInfo + " ｜ 📅 " + res.date;
             
             if (res.bountyKing && res.bountyKing.name !== "無") { document.getElementById("repKingName").textContent = res.bountyKing.name; document.getElementById("repKingScore").textContent = (res.bountyKing.score > 0 ? "+" : "") + res.bountyKing.score + " 分"; } else { document.getElementById("repKingName").textContent = "平手 / 激戰中"; document.getElementById("repKingScore").textContent = "-- 分"; }
-            if (res.gameKing && res.gameKing.name !== "無") { document.getElementById("repGameKingName").textContent = res.gameKing.name; document.getElementById("repGameKingScore").textContent = (res.gameKing.score > 0 ? "+" : "") + res.gameKing.score + " 分"; } else { document.getElementById("repGameKingName").textContent = "休戰中"; document.getElementById("repGameKingScore").textContent = "--"; }
+            
+            // 💡 修正：如果沒有四人遊戲資料，遊戲王顯示為未解鎖
+            if (res.gameKing && res.gameKing.name !== "無") { 
+                document.getElementById("repGameKingName").textContent = res.gameKing.name; 
+                document.getElementById("repGameKingScore").textContent = (res.gameKing.score > 0 ? "+" : "") + res.gameKing.score + " 分"; 
+            } else if (res.dynData && res.dynData.error) {
+                document.getElementById("repGameKingName").textContent = "尚未解鎖"; 
+                document.getElementById("repGameKingScore").textContent = "--";
+            } else { 
+                document.getElementById("repGameKingName").textContent = "休戰中"; 
+                document.getElementById("repGameKingScore").textContent = "--"; 
+            }
             
             var statsHtml = ""; res.playerStats.forEach(function(p) { var ptsClass = p.matchPts > 0 ? "pts-positive" : (p.matchPts < 0 ? "pts-negative" : "pts-zero"); var sign = p.matchPts > 0 ? "+" : ""; statsHtml += `<div class="stat-row"><div class="stat-name">${p.name}</div><div class="stat-gross">總桿 ${p.grossScore}</div><div class="stat-pts ${ptsClass}">${sign}${p.matchPts}</div></div>`; }); document.getElementById("repStatsList").innerHTML = statsHtml;
             var eaglesHtml = "", birdiesHtml = ""; if (res.highlights.eagles.length > 0) { res.highlights.eagles.forEach(function(e) { eaglesHtml += `<div class="hl-item hl-eagle">🦅 ${e}</div>`; }); } else { eaglesHtml = '<div class="hl-item" style="color:#777;">🦅 尚無老鷹</div>'; } if (res.highlights.birdies.length > 0) { res.highlights.birdies.forEach(function(b) { birdiesHtml += `<div class="hl-item hl-birdie">🕊️ ${b}</div>`; }); } else { birdiesHtml = '<div class="hl-item" style="color:#777;">🕊️ 尚無抓鳥</div>'; } document.getElementById("repEaglesArea").innerHTML = eaglesHtml; document.getElementById("repBirdiesArea").innerHTML = birdiesHtml;
             if (res.highlights.blowUpHole && res.highlights.blowUpHole.hole > 0) { var bh = res.highlights.blowUpHole; document.getElementById("repBlowUpArea").innerHTML = `<span style="font-size: 20px; font-weight:bold;">⛳ 第 ${bh.hole} 洞 (Par ${bh.par})</span><br><span style="color: #ffcc80; font-size:15px; margin-top:5px; display:inline-block;">${bh.desc} ${bh.totalStrokes} 桿 (共超桿 +${bh.overPar})</span>`; } else { document.getElementById("repBlowUpArea").innerHTML = '<span style="color:#777;">戰況膠著，尚未產生魔鬼洞</span>'; }
             var detailedHtml = ""; if (res.scoreData && res.scoreData.length > 0) { detailedHtml += '<h3 class="pt-title"><i class="fas fa-chart-bar"></i> 完整記分卡與讓桿積分</h3><div style="overflow-x:auto;"><table class="premium-table">'; var transposed = res.scoreData[0].map(function(c, i) { return res.scoreData.map(function(r) { return r[i]; }); }); transposed.forEach(function(row, rIdx) { if (rIdx === 11) { detailedHtml += '<tr>'; transposed[0].forEach(function(headerCell) { detailedHtml += `<th>${headerCell}</th>`; }); detailedHtml += '</tr>'; } detailedHtml += '<tr>'; var isHoleColumn = (rIdx >= 1 && rIdx <= 9) || (rIdx >= 11 && rIdx <= 19); var parValue = parseInt(row[1]); row.forEach(function(cell, cIdx) { var tag = (rIdx === 0 || cIdx === 0) ? 'th' : 'td'; var style = ""; if (cIdx >= 22 && rIdx !== 0) style = "color:#ff8a80; font-weight:bold;"; if (cIdx === 1 && rIdx !== 0) style = "color:#64b5f6; font-weight:bold;"; if (cIdx === 2 && rIdx !== 0) style = "color:#888;"; var cellContent = cell; if (tag === 'td' && isHoleColumn && cIdx > 2 && cell !== "") { var score = parseInt(cell); if (!isNaN(score) && !isNaN(parValue)) { var diff = score - parValue; var spanClass = "score-box "; if (diff <= -2) spanClass += "shape-eagle"; else if (diff === -1) spanClass += "shape-birdie"; else if (diff === 0) spanClass += "shape-par"; else if (diff === 1) spanClass += "shape-bogey"; else spanClass += "shape-double"; cellContent = `<span class="${spanClass}">${cell}</span>`; } } detailedHtml += `<${tag} style="${style}">${cellContent}</${tag}>`; }); detailedHtml += '</tr>'; }); detailedHtml += '</table></div>'; }
+            
+            // 💡 比桿對戰現在免費開放，直接顯示
             if (res.matchData && res.matchData.length > 0) { detailedHtml += '<h3 class="pt-title" style="margin-top:30px;"><i class="fas fa-trophy"></i> 對戰勝負與下回讓桿</h3><div style="overflow-x:auto;"><table class="premium-table"><tr><th style="width:25%;">對戰組合</th><th>讓桿</th><th>前九</th><th>後九</th><th>總和</th><th style="background:linear-gradient(135deg, #0288d1, #01579b); color:white;">下回讓桿</th></tr>'; res.matchData.forEach(function(r) { detailedHtml += `<tr><td style="font-weight:bold;">${r.name}</td><td style="color:#aaa;">${r.hdcp}</td><td>${r.f9}</td><td>${r.b9}</td><td style="color:#ff8a80; font-weight:bold;">${r.all}</td><td style="color:#81d4fa; font-weight:bold;">${r.nextHdcp}</td></tr>`; }); detailedHtml += '</table></div>'; }
+            
             if (res.dynData && !res.dynData.error) { detailedHtml += `<h3 class="pt-title" style="margin-top:30px;"><i class="fas fa-dice"></i> 四人遊戲總分 (${res.dynData.mode})</h3><div style="overflow-x:auto;"><table class="premium-table"><tr>`; res.dynData.players.forEach(function(p) { detailedHtml += `<th>${p}</th>`; }); detailedHtml += '</tr><tr>'; res.dynData.players.forEach(function(p) { var tot = res.dynData.finalTotals[p]; var color = tot > 0 ? "#ff5252" : (tot < 0 ? "#81c784" : "#ccc"); var sign = tot > 0 ? "+" : ""; detailedHtml += `<td style="font-weight:bold; font-size:16px; color:${color};">${sign}${tot}</td>`; }); detailedHtml += '</tr></table></div>'; } document.getElementById("repDetailedDataArea").innerHTML = detailedHtml;
         }
 
