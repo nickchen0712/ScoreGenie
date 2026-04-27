@@ -828,35 +828,65 @@
             }
         }
 
+// 💡 修正版：送出成績（支援手動清空）
         async function submitScores() {
             let hole = document.getElementById('holeSelect').value; 
-            if(!hole) return alert("請選洞！"); 
-            let scores = {}; let hasScore = false;
+            if(!hole) return alert("請先選擇洞號！"); 
+            
+            let scores = {}; 
+            let hasAnyContent = false;
             for(let i=0; i<4; i++) { 
                 let input = document.getElementById(`sc_${i}`); 
-                if(input) { scores[i] = input.value; if(input.value) hasScore = true; } 
+                if(input) { 
+                    scores[i] = input.value; 
+                    if(input.value !== "") hasAnyContent = true; 
+                } 
             }
-            if(!hasScore) return alert("請填寫成績");
+
+            // 如果全部都是空的，詢問是否要清空該洞成績
+            if(!hasAnyContent) {
+                if(!confirm(`第 ${hole} 洞目前沒有輸入任何數字，確定要清空（刪除）該洞成績嗎？`)) return;
+            }
             
             let btn = document.getElementById('btnSubmitScore'); 
             let origText = btn.innerHTML; 
-            btn.innerHTML = '<i class="fas fa-hourglass-half"></i> 寫入中...'; btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-hourglass-half"></i> 處理中...'; btn.disabled = true;
             
-            const res = await apiCall("submitHoleScores", { pin: currentPin, hole: hole, scores: scores }, false, "寫入成績..."); 
+            const res = await apiCall("submitHoleScores", { pin: currentPin, hole: hole, scores: scores }, false, "更新成績..."); 
             
             if (res) { 
-                btn.innerHTML = '<i class="fas fa-check-circle"></i> 送出成功！'; btn.classList.replace('btn-green', 'btn-blue'); 
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> 更新成功！'; btn.classList.replace('btn-green', 'btn-blue'); 
                 setTimeout(() => { btn.innerHTML = origText; btn.classList.replace('btn-blue', 'btn-green'); btn.disabled = false; }, 1500);
-                if(hole < 18) document.getElementById('holeSelect').value = parseInt(hole) + 1; 
-                let inputs = document.querySelectorAll('.score-input'); 
-                inputs.forEach(inp => inp.value = ""); 
-                if(inputs.length > 0) inputs[0].focus();
                 
-                if (res.dynData || res.matchData) {
-                    syncAllResults(true);
+                // 如果是填入成績則自動跳下一洞，如果是清空則停留在原洞
+                if(hasAnyContent && hole < 18) {
+                    document.getElementById('holeSelect').value = parseInt(hole) + 1; 
+                    let inputs = document.querySelectorAll('.score-input'); 
+                    inputs.forEach(inp => inp.value = ""); 
+                    if(inputs.length > 0) inputs[0].focus();
                 }
+                
+                syncAllResults(true);
             } else { 
                 btn.innerHTML = origText; btn.disabled = false; 
+            }
+        }
+
+        // 💡 新增：一鍵清除此洞功能
+        async function clearHoleScores() {
+            let hole = document.getElementById('holeSelect').value;
+            if(!hole) return alert("請先選擇要清除的洞號！");
+            
+            if(!confirm(`⚠️ 確定要徹底刪除「第 ${hole} 洞」的所有成績嗎？`)) return;
+            
+            let emptyScores = { 0: "", 1: "", 2: "", 3: "" };
+            
+            const res = await apiCall("submitHoleScores", { pin: currentPin, hole: hole, scores: emptyScores }, false, "正在清除...");
+            if(res) {
+                alert(`✅ 第 ${hole} 洞成績已成功刪除。`);
+                let inputs = document.querySelectorAll('.score-input'); 
+                inputs.forEach(inp => inp.value = ""); 
+                syncAllResults(true);
             }
         }
 
