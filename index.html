@@ -129,11 +129,14 @@
     <div id="leaveModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; align-items:center; justify-content:center;">
         <div style="background:#1e1e1e; padding:20px; border-radius:12px; width:90%; max-width:400px; text-align:center; border: 1px solid #444; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
             <h3 style="color:#ff8a80; margin-top:0;"><i class="fas fa-door-open"></i> 完成球局</h3>
-            <p style="font-size:14px; color:#aaa; margin-bottom:20px;">請選擇您要如何處理此球局：</p>
-            <button onclick="actionLeaveOnly()" class="btn-gray" style="margin-bottom:10px;"><i class="fas fa-sign-out-alt"></i> 暫時離開 (保留球局)</button>
-            <button id="btnLeaveArchiveReport" onclick="actionArchiveAndReport()" class="btn-gold" style="margin-bottom:10px;"><i class="fas fa-chart-bar"></i> 封存並產生尊榮戰報</button>
-            <button id="btnLeaveDelete" onclick="actionDeleteRoom()" class="btn-red" style="margin-bottom:10px; display:none;"><i class="fas fa-trash-alt"></i> 徹底刪除此球局 (釋放 PIN)</button>
-            <button onclick="document.getElementById('leaveModal').style.display='none'" style="background:transparent; color:#81d4fa; border:1px solid #81d4fa; padding:10px; margin-bottom:0;">取消</button>
+            
+            <!-- 💡 新增了 id="leaveModalMsg" 用來動態改變提示文字 -->
+            <p id="leaveModalMsg" style="font-size:14px; color:#aaa; margin-bottom:20px;">請選擇您要如何處理此球局：</p>
+            
+            <button onclick="actionLeaveOnly()" class="btn-gray" style="margin-bottom:10px; width:100%;"><i class="fas fa-sign-out-alt"></i> 暫時離開 (保留成績並退回大廳)</button>
+            <button id="btnLeaveArchiveReport" onclick="actionArchiveAndReport()" class="btn-gold" style="margin-bottom:10px; width:100%;"><i class="fas fa-chart-bar"></i> 封存並產生尊榮戰報</button>
+            <button id="btnLeaveDelete" onclick="actionDeleteRoom()" class="btn-red" style="margin-bottom:10px; display:none; width:100%;"><i class="fas fa-trash-alt"></i> 徹底刪除此球局 (釋放 PIN)</button>
+            <button onclick="document.getElementById('leaveModal').style.display='none'" style="background:transparent; color:#81d4fa; border:1px solid #81d4fa; padding:10px; margin-bottom:0; width:100%;">取消</button>
         </div>
     </div>
 
@@ -692,28 +695,42 @@
             startBackgroundSync();
         }
 
-        function leaveRoom() {
+function leaveRoom() {
             let isCreator = localStorage.getItem("isCreator_" + currentPin) === "true"; 
             let isSuperAdmin = localStorage.getItem("sg_super_admin") === "true"; 
             
             let btnReport = document.getElementById('btnLeaveArchiveReport');
-            if (currentRoomIsPremium) {
-                btnReport.disabled = false;
-                btnReport.style.background = "linear-gradient(135deg, #ffd700, #ffb300)";
-                btnReport.style.color = "#3e2723";
-                btnReport.innerHTML = '<i class="fas fa-chart-bar"></i> 封存並產生尊榮戰報';
-            } else {
-                btnReport.disabled = true;
-                btnReport.style.background = "#444";
-                btnReport.style.color = "#888";
-                btnReport.innerHTML = '<i class="fas fa-lock"></i> 封存並產生尊榮戰報';
-            }
-
             let btnDelete = document.getElementById('btnLeaveDelete');
-            if (isCreator || isSuperAdmin || isAdminAuth(currentPin)) {
-                btnDelete.style.display = 'block';
-            } else {
+            let msgText = document.getElementById('leaveModalMsg');
+
+            if (currentTourneyId) {
+                // 🛡️ 賽事鎖定機制：如果是球隊聯賽的子球局，直接沒收封存與刪除的權利！
+                btnReport.style.display = 'none';
                 btnDelete.style.display = 'none';
+                
+                msgText.innerHTML = "<span style='color:#ffd700; font-size:16px; font-weight:bold;'><i class='fas fa-lock'></i> 聯賽保護機制啟動</span><br><br>本球局隸屬於球隊聯賽，為確保全隊成績完整，單組無法自行封存或刪除。<br><br><span style='color:#81d4fa;'>請點擊「暫時離開」，最終結算將由總幹事統一處理！</span>";
+            } else {
+                // 一般單局記分：恢復原來的邏輯
+                msgText.innerHTML = "請選擇您要如何處理此球局：";
+                btnReport.style.display = 'inline-block';
+                
+                if (currentRoomIsPremium) {
+                    btnReport.disabled = false;
+                    btnReport.style.background = "linear-gradient(135deg, #ffd700, #ffb300)";
+                    btnReport.style.color = "#3e2723";
+                    btnReport.innerHTML = '<i class="fas fa-chart-bar"></i> 封存並產生尊榮戰報';
+                } else {
+                    btnReport.disabled = true;
+                    btnReport.style.background = "#444";
+                    btnReport.style.color = "#888";
+                    btnReport.innerHTML = '<i class="fas fa-lock"></i> 封存並產生尊榮戰報';
+                }
+
+                if (isCreator || isSuperAdmin || isAdminAuth(currentPin)) {
+                    btnDelete.style.display = 'inline-block';
+                } else {
+                    btnDelete.style.display = 'none';
+                }
             }
 
             document.getElementById('leaveModal').style.display = 'flex';
