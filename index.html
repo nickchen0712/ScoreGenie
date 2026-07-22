@@ -349,6 +349,64 @@
                 <h3 style="color:#ce93d8; letter-spacing:3px; margin-top:0;">TEAM TOURNAMENT REPORT</h3>
                 <p id="trCourseDate" style="border-top:1px solid #333; border-bottom:1px solid #333; padding:10px 0; display:inline-block; margin:0;"></p>
             </div>
+
+<!-- ========================================== -->
+    <!-- 🛡️ 球隊專屬營運中心 (DGL大鋼龍) -->
+    <!-- ========================================== -->
+    <div id="page-team-portal" class="page-container" style="justify-content: flex-start; padding-top:40px;">
+        <div style="max-width: 800px; margin: 0 auto; padding-bottom: 30px; width: 100%;">
+            <div class="report-header">
+                <h1 class="gold-title" style="margin-bottom: 5px;"><i class="fas fa-shield-alt"></i> <span id="tpTeamName">DGL大鋼龍</span></h1>
+                <h3 style="color:#ce93d8; letter-spacing:2px; margin-top:0;">TEAM OPERATIONS CENTER</h3>
+            </div>
+
+            <!-- 1. 歷史月例賽戰報 -->
+            <div class="premium-card" style="text-align:left; border-color:#81d4fa;">
+                <p style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #81d4fa;"><i class="fas fa-calendar-check"></i> 歷次月例賽戰報</p>
+                <div id="tpHistoryReports" style="margin-bottom:15px;"></div>
+                
+                <div style="background:#252525; padding:15px; border-radius:8px; border:1px dashed #444;">
+                    <p style="font-size: 12px; color: #aaa; margin:0 0 10px 0;">賽事結算後，將戰報代碼 (如 TR_ABCD) 貼入此處即可匯入球隊資料庫：</p>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="tpImportReportId" placeholder="輸入戰報代碼 TR_..." style="margin:0; font-size:14px; text-transform:uppercase;">
+                        <button onclick="importReportToTeam()" class="btn-green" style="margin:0; width:120px; font-size:14px;">匯入成績</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 年度大數據榮譽榜 -->
+            <div class="premium-card king-card" style="text-align:left;">
+                <p style="font-size: 18px; font-weight: bold; margin: 0 0 5px 0; color: #ffd700;"><i class="fas fa-chart-line"></i> 年度累積大數據</p>
+                <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">系統自動讀取所有已匯入之戰報，統計球員歷史輝煌紀錄。</p>
+                
+                <div style="overflow-x:auto;">
+                    <table class="data-table" id="tpStatsTable" style="min-width: 600px; font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th style="background:#3e2723; color:#ffd700;">球員姓名</th>
+                                <th style="background:#1b5e20;">淨桿冠</th><th style="background:#33691e;">總桿冠</th>
+                                <th>淨桿亞</th><th>淨桿季</th>
+                                <th>Lucky7</th><th>BB獎</th>
+                                <th style="background:#4a148c;">老鷹</th><th style="background:#4a148c;">小鳥</th>
+                                <th style="background:#01579b;">近洞獎</th><th style="background:#e65100;">遠距獎</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. 名單管理 -->
+            <div class="premium-card" style="text-align:left; border-color:#ce93d8;">
+                <p style="font-size: 18px; font-weight: bold; margin: 0 0 10px 0; color: #ce93d8;"><i class="fas fa-users"></i> 球隊名單管理</p>
+                <p style="font-size: 12px; color: #aaa; margin-bottom: 10px;">請將大鋼龍的所有隊員名單貼在下方（可用換行、逗號或頓號分隔）。系統會依此名單初始化大數據追蹤。</p>
+                <textarea id="tpRosterInput" rows="5" placeholder="王大明, 李小華, 張三..." style="width:100%; margin-bottom:10px; background:#2c2c2c; color:#fff; border:1px solid #555; padding:10px; border-radius:8px; box-sizing:border-box;"></textarea>
+                <button onclick="updateTeamRoster()" class="btn-purple" style="margin:0; font-size:14px;"><i class="fas fa-save"></i> 儲存名單</button>
+            </div>
+            
+            <button onclick="window.location.href='?'" class="btn-gray" style="margin-top:20px;"><i class="fas fa-home"></i> 返回首頁</button>
+        </div>
+    </div>
             
             <!-- 💡 新增：賽事榮譽榜卡片 -->
             <div class="premium-card king-card" id="trHonorsCard" style="display:none; margin-top:20px; text-align:left;">
