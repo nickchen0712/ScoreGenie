@@ -1914,6 +1914,100 @@ function leaveRoom() {
             }
         }
 
+        // ==========================================
+        // 🛡️ 球隊專屬營運中心 JS 控制
+        // ==========================================
+        let currentTeamId = "DGL";
+
+        async function navToTeamPortal(teamId) {
+            currentTeamId = teamId;
+            navTo('page-team-portal');
+            loadTeamPortalData();
+        }
+
+        async function loadTeamPortalData() {
+            let btn = document.querySelector("#page-team-portal .btn-purple");
+            let orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 讀取中...'; btn.disabled = true;
+
+            const res = await apiCall("getTeamPortalData", { teamId: currentTeamId }, true, "讀取球隊大數據...");
+            btn.innerHTML = orig; btn.disabled = false;
+            
+            if(!res) return;
+
+            // 1. 渲染歷史戰報列表
+            let reportsHtml = "";
+            if (res.reports.length === 0) {
+                reportsHtml = '<p style="color:#777; font-size:14px;">目前尚無匯入任何戰報紀錄。</p>';
+            } else {
+                res.reports.forEach(r => {
+                    let d = new Date(r.date).toLocaleDateString();
+                    let url = window.location.origin + window.location.pathname + "?treport=" + r.reportId + "&openExternalBrowser=1";
+                    reportsHtml += `<div style="background:#252525; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-left: 3px solid #81d4fa;">
+                        <div>
+                            <div style="font-weight:bold; color:#fff; font-size:15px;">${r.courseName}</div>
+                            <div style="font-size:12px; color:#aaa;">${d} | 代碼: ${r.reportId}</div>
+                        </div>
+                        <button onclick="window.open('${url}', '_blank')" class="btn-blue" style="width:auto; padding:6px 12px; margin:0; font-size:12px;">查看戰報</button>
+                    </div>`;
+                });
+            }
+            document.getElementById('tpHistoryReports').innerHTML = reportsHtml;
+
+            // 2. 渲染名單
+            document.getElementById('tpRosterInput').value = res.team.roster.join("、");
+
+            // 3. 渲染大數據表格
+            let stats = res.cumulativeStats;
+            let players = res.team.roster;
+            
+            // 依據淨桿冠軍次數 -> 總桿冠軍次數 -> 老鷹 -> 小鳥排序
+            players.sort((a, b) => {
+                let sA = stats[a], sB = stats[b];
+                if(sB.net1 !== sA.net1) return sB.net1 - sA.net1;
+                if(sB.gross1 !== sA.gross1) return sB.gross1 - sA.gross1;
+                if(sB.eagles !== sA.eagles) return sB.eagles - sA.eagles;
+                return sB.birdies - sA.birdies;
+            });
+
+            let tbodyHtml = "";
+            players.forEach(p => {
+                let s = stats[p];
+                // 如果該球員完全沒有任何紀錄，為了畫面乾淨，可以選擇是否顯示（目前設定全部顯示，皆為0）
+                tbodyHtml += `<tr>
+                    <td style="font-weight:bold; color:#fff; text-align:left;">${p}</td>
+                    <td style="color:${s.net1>0?'#81c784':'#555'}; font-weight:${s.net1>0?'bold':'normal'};">${s.net1}</td>
+                    <td style="color:${s.gross1>0?'#ffd700':'#555'}; font-weight:${s.gross1>0?'bold':'normal'};">${s.gross1}</td>
+                    <td style="color:${s.net2>0?'#fff':'#555'};">${s.net2}</td>
+                    <td style="color:${s.net3>0?'#fff':'#555'};">${s.net3}</td>
+                    <td style="color:${s.lucky7>0?'#ce93d8':'#555'};">${s.lucky7}</td>
+                    <td style="color:${s.bb>0?'#ff8a80':'#555'};">${s.bb}</td>
+                    <td style="color:${s.eagles>0?'#ffd700':'#555'}; font-weight:bold;">${s.eagles}</td>
+                    <td style="color:${s.birdies>0?'#81d4fa':'#555'};">${s.birdies}</td>
+                    <td style="color:${s.ntp>0?'#fff':'#555'};">${s.ntp}</td>
+                    <td style="color:${s.ld>0?'#ffb74d':'#555'};">${s.ld}</td>
+                </tr>`;
+            });
+            document.querySelector('#tpStatsTable tbody').innerHTML = tbodyHtml;
+        }
+
+        async function updateTeamRoster() {
+            let text = document.getElementById('tpRosterInput').value;
+            if(!text.trim()) return alert("名單不能為空！");
+            const res = await apiCall("updateTeamRoster", { teamId: currentTeamId, roster: text }, true, "儲存名單中...");
+            if(res) { alert(res.message); loadTeamPortalData(); }
+        }
+
+        async function importReportToTeam() {
+            let rId = document.getElementById('tpImportReportId').value.toUpperCase().trim();
+            if(!rId) return alert("請輸入戰報代碼！");
+            const res = await apiCall("linkReportToTeam", { teamId: currentTeamId, reportId: rId }, true, "匯入戰報中...");
+            if(res) { 
+                alert(res.message); 
+                document.getElementById('tpImportReportId').value = "";
+                loadTeamPortalData(); 
+            }
+        }
+
     </script>
 </body>
 </html>
