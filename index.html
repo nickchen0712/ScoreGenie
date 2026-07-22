@@ -1658,16 +1658,99 @@ function leaveRoom() {
             }
         }
 
+        // 💡 修改：將榮譽榜與鷹鳥榜渲染到畫面上
         async function loadTeamReport(reportId) {
             navTo('page-team-report'); 
             currentViewedReportId = reportId; 
             
             const res = await apiCall("getTeamReportData", { reportId: reportId }, true, "載入全隊報告..."); if(!res) return;
             document.getElementById('trCourseDate').textContent = "🏟️ " + res.courseName + " ｜ 📅 " + new Date(res.date).toLocaleDateString();
-            let finalData = res.finalLeaderboard || []; let grossSorted = [...finalData].sort((a,b) => a.gross - b.gross); let netSorted = [...finalData].sort((a,b) => a.netScore - b.netScore);
-            let html = ""; netSorted.forEach((p, i) => { let grossRank = grossSorted.findIndex(x => x.name === p.name) + 1; html += `<tr><td style="font-weight:bold; color:#81c784; font-size:16px;">${i+1}</td><td style="font-weight:bold; color:#ffd700;">${grossRank}</td><td style="font-weight:bold; text-align:center;">${formatNameForDisplay(p.name)}</td><td>${p.gross}</td><td>${p.handicap}</td><td style="color:#81c784; font-weight:bold;">${p.netScore}</td></tr>`; });
+            
+            // --- 渲染賽事榮譽榜 ---
+            if (res.specialAwards) {
+                let honors = res.specialAwards.honors || {};
+                let honorsHtml = "";
+                let awardMap = {
+                    gross1: { title: "總桿冠軍", color: "#ffd700" },
+                    net1: { title: "淨桿冠軍", color: "#81d4fa" },
+                    net2: { title: "淨桿亞軍", color: "#a5d6a7" },
+                    net3: { title: "淨桿季軍", color: "#ffb74d" },
+                    lucky7: { title: "Lucky 7", color: "#ce93d8" },
+                    bbp1: { title: "BB+1 獎", color: "#f48fb1" },
+                    bb: { title: "BB 獎", color: "#ff8a80" }
+                };
+
+                for (let key in awardMap) {
+                    if (honors[key]) {
+                        honorsHtml += `<div style="background:#252525; padding:10px; border-radius:8px; border-left:4px solid ${awardMap[key].color};">
+                            <div style="font-size:12px; color:#aaa;">${awardMap[key].title}</div>
+                            <div style="font-size:16px; font-weight:bold; color:#fff;">${honors[key]}</div>
+                        </div>`;
+                    }
+                }
+                if (honorsHtml !== "") {
+                    document.getElementById('trHonorsContent').innerHTML = honorsHtml;
+                    document.getElementById('trHonorsCard').style.display = 'block';
+                }
+
+                // --- 渲染近洞與遠距獎 ---
+                let ntpLdHtml = "";
+                let ntp = res.specialAwards.ntp || {};
+                if (Object.keys(ntp).length > 0) {
+                    ntpLdHtml += `<div style="margin-bottom:12px;"><strong style="color:#81c784;">🎯 近洞獎得主：</strong><br>`;
+                    let ntpArr = [];
+                    for(let h in ntp) ntpArr.push(`第${h}洞: <span style="color:#fff;">${ntp[h]}</span>`);
+                    ntpLdHtml += `<span style="font-size:14px; color:#aaa; line-height:1.8;">${ntpArr.join("、 ")}</span></div>`;
+                }
+
+                let ld = res.specialAwards.ld || [];
+                if (ld.length > 0) {
+                    ntpLdHtml += `<div><strong style="color:#ffb74d;">🚀 遠距獎得主：</strong><br>`;
+                    let ldArr = [];
+                    ld.forEach(item => ldArr.push(`第${item.hole}洞: <span style="color:#fff;">${item.player}</span>`));
+                    ntpLdHtml += `<span style="font-size:14px; color:#aaa; line-height:1.8;">${ldArr.join("、 ")}</span></div>`;
+                }
+
+                if (ntpLdHtml !== "") {
+                    document.getElementById('trNtpLdContent').innerHTML = ntpLdHtml;
+                    document.getElementById('trSpecialAwardsCard').style.display = 'block';
+                }
+            }
+
+            // --- 渲染鷹鳥榜 ---
+            if ((res.eagles && res.eagles.length > 0) || (res.birdies && res.birdies.length > 0)) {
+                let eaglesHtml = "", birdiesHtml = "";
+                
+                if (res.eagles && res.eagles.length > 0) {
+                    res.eagles.forEach(e => eaglesHtml += `<div class="hl-item hl-eagle">🦅 ${e}</div>`);
+                } else { 
+                    eaglesHtml = '<div class="hl-item" style="color:#777;">🦅 本場賽事尚無老鷹</div>'; 
+                }
+
+                if (res.birdies && res.birdies.length > 0) {
+                    res.birdies.forEach(b => birdiesHtml += `<div class="hl-item hl-birdie">🕊️ ${b}</div>`);
+                } else { 
+                    birdiesHtml = '<div class="hl-item" style="color:#777;">🕊️ 本場賽事尚無抓鳥</div>'; 
+                }
+
+                document.getElementById('trEaglesArea').innerHTML = eaglesHtml;
+                document.getElementById('trBirdiesArea').innerHTML = birdiesHtml;
+                document.getElementById('trBirdieEagleCard').style.display = 'block';
+            }
+
+            // --- 渲染總成績板 ---
+            let finalData = res.finalLeaderboard || []; 
+            let grossSorted = [...finalData].sort((a,b) => a.gross - b.gross); 
+            let netSorted = [...finalData].sort((a,b) => a.netScore - b.netScore);
+            
+            let html = ""; 
+            netSorted.forEach((p, i) => { 
+                let grossRank = grossSorted.findIndex(x => x.name === p.name) + 1; 
+                html += `<tr><td style="font-weight:bold; color:#81c784; font-size:16px;">${i+1}</td><td style="font-weight:bold; color:#ffd700;">${grossRank}</td><td style="font-weight:bold; text-align:center;">${formatNameForDisplay(p.name)}</td><td>${p.gross}</td><td>${p.handicap}</td><td style="color:#81c784; font-weight:bold;">${p.netScore}</td></tr>`; 
+            });
             document.querySelector('#trFinalBoard tbody').innerHTML = html;
             
+            // --- 渲染單組戰報連結 ---
             let linksHtml = ""; 
             if(res.groupReports) { 
                 res.groupReports.forEach((g, i) => { 
