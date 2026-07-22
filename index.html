@@ -350,7 +350,50 @@
                 <p id="trCourseDate" style="border-top:1px solid #333; border-bottom:1px solid #333; padding:10px 0; display:inline-block; margin:0;"></p>
             </div>
 
-<!-- ========================================== -->
+
+            <!-- 💡 新增：賽事榮譽榜卡片 -->
+            <div class="premium-card king-card" id="trHonorsCard" style="display:none; margin-top:20px; text-align:left;">
+                <p style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #ffd700;"><i class="fas fa-crown"></i> 賽事榮譽榜</p>
+                <div id="trHonorsContent" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"></div>
+                <div style="position: absolute; top: 10px; right: 10px; font-size: 60px; opacity: 0.05;"><i class="fas fa-crown"></i></div>
+            </div>
+
+            <!-- 💡 新增：技術獎項 (近洞/遠距) 卡片 -->
+            <div class="premium-card" id="trSpecialAwardsCard" style="display:none; text-align:left; border-color: #81c784;">
+                <p style="font-size: 16px; font-weight: bold; margin: 0 0 15px 0; color: #81c784;"><i class="fas fa-bullseye"></i> 技術獎項</p>
+                <div id="trNtpLdContent"></div>
+            </div>
+
+            <!-- 💡 新增：鷹鳥榜卡片 -->
+            <div class="premium-card" id="trBirdieEagleCard" style="display:none; text-align:left; border-color: #ce93d8;">
+                <p style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #ce93d8;"><i class="fas fa-star"></i> 全隊鷹鳥榜</p>
+                <div id="trEaglesArea"></div>
+                <div id="trBirdiesArea"></div>
+            </div>
+
+            <!-- 總成績結算 (保留原有) -->
+            <div class="premium-card" style="margin-top:20px;">
+                <p style="font-size: 18px; font-weight: bold; text-align: center; margin: 0 0 15px 0; color: #ffd700;"><i class="fas fa-trophy"></i> 淨桿總成績排行榜</p>
+                <div style="overflow-x:auto;">
+                    <table class="premium-table" id="trFinalBoard">
+                        <thead><tr><th style="width:18%;">淨桿 Rank</th><th style="width:18%;">總桿 Rank</th><th style="width:25%;">姓名</th><th style="width:13%;">總桿</th><th style="width:13%;">差點</th><th style="width:13%;">淨桿</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="premium-card">
+                <p style="font-size: 16px; font-weight: bold; text-align: left; margin: 0 0 10px 0; color: #81d4fa;"><i class="fas fa-link"></i> 各組詳細戰報連結</p>
+                <div id="trGroupLinks"></div>
+            </div>
+            
+            <button onclick="shareTeamReportLink()" class="btn-gold" style="margin-top:10px;"><i class="fas fa-copy"></i> 複製全隊戰報網址分享</button>
+            <button onclick="document.getElementById('emailModal').style.display='flex'" class="btn-blue" style="margin-top:10px;"><i class="fas fa-envelope"></i> 以 Email 傳送戰報</button>
+            <button onclick="window.location.href='?'" class="btn-gray" style="margin-top:20px;"><i class="fas fa-plus-circle"></i> 我也要開局</button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
     <!-- 🛡️ 球隊專屬營運中心 (DGL大鋼龍) -->
     <!-- ========================================== -->
     <div id="page-team-portal" class="page-container" style="justify-content: flex-start; padding-top:40px;">
@@ -407,49 +450,7 @@
             <button onclick="window.location.href='?'" class="btn-gray" style="margin-top:20px;"><i class="fas fa-home"></i> 返回首頁</button>
         </div>
     </div>
-            
-            <!-- 💡 新增：賽事榮譽榜卡片 -->
-            <div class="premium-card king-card" id="trHonorsCard" style="display:none; margin-top:20px; text-align:left;">
-                <p style="font-size: 18px; font-weight: bold; margin: 0 0 15px 0; color: #ffd700;"><i class="fas fa-crown"></i> 賽事榮譽榜</p>
-                <div id="trHonorsContent" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"></div>
-                <div style="position: absolute; top: 10px; right: 10px; font-size: 60px; opacity: 0.05;"><i class="fas fa-crown"></i></div>
-            </div>
-
-            <!-- 💡 新增：技術獎項 (近洞/遠距) 卡片 -->
-            <div class="premium-card" id="trSpecialAwardsCard" style="display:none; text-align:left; border-color: #81c784;">
-                <p style="font-size: 16px; font-weight: bold; margin: 0 0 15px 0; color: #81c784;"><i class="fas fa-bullseye"></i> 技術獎項</p>
-                <div id="trNtpLdContent"></div>
-            </div>
-
-            <!-- 💡 新增：鷹鳥榜卡片 -->
-            <div class="premium-card" id="trBirdieEagleCard" style="display:none; text-align:left; border-color: #ce93d8;">
-                <p style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #ce93d8;"><i class="fas fa-star"></i> 全隊鷹鳥榜</p>
-                <div id="trEaglesArea"></div>
-                <div id="trBirdiesArea"></div>
-            </div>
-
-            <!-- 總成績結算 (保留原有) -->
-            <div class="premium-card" style="margin-top:20px;">
-                <p style="font-size: 18px; font-weight: bold; text-align: center; margin: 0 0 15px 0; color: #ffd700;"><i class="fas fa-trophy"></i> 淨桿總成績排行榜</p>
-                <div style="overflow-x:auto;">
-                    <table class="premium-table" id="trFinalBoard">
-                        <thead><tr><th style="width:18%;">淨桿 Rank</th><th style="width:18%;">總桿 Rank</th><th style="width:25%;">姓名</th><th style="width:13%;">總桿</th><th style="width:13%;">差點</th><th style="width:13%;">淨桿</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <div class="premium-card">
-                <p style="font-size: 16px; font-weight: bold; text-align: left; margin: 0 0 10px 0; color: #81d4fa;"><i class="fas fa-link"></i> 各組詳細戰報連結</p>
-                <div id="trGroupLinks"></div>
-            </div>
-            
-            <button onclick="shareTeamReportLink()" class="btn-gold" style="margin-top:10px;"><i class="fas fa-copy"></i> 複製全隊戰報網址分享</button>
-            <button onclick="document.getElementById('emailModal').style.display='flex'" class="btn-blue" style="margin-top:10px;"><i class="fas fa-envelope"></i> 以 Email 傳送戰報</button>
-            <button onclick="window.location.href='?'" class="btn-gray" style="margin-top:20px;"><i class="fas fa-plus-circle"></i> 我也要開局</button>
-        </div>
-    </div>
-
+    
     <div id="page-main" class="page-container" style="justify-content: flex-start;">
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
