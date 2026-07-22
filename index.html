@@ -1514,7 +1514,65 @@ function leaveRoom() {
             document.getElementById('adminLeaderboardArea').style.display = 'block';
             let html = ""; currentTourneyData.sort((a, b) => a.netScore - b.netScore).forEach((p, i) => { html += `<tr><td style="font-weight:bold; color:#ffd700;">${i+1}</td><td style="font-weight:bold; text-align:left;">${p.name}</td><td style="color:#aaa;">${p.gross}</td><td><input type="number" class="net-input" value="${p.handicap}" onchange="updateHandicap('${p.name}', this.value)"></td><td style="color:#81c784; font-weight:bold; font-size:16px;">${p.gross === "未開球" ? "-" : p.netScore}</td></tr>`; });
             document.querySelector('#adminLeaderboard tbody').innerHTML = html;
+            
+            // 顯示獎項區塊並自動分配名單
+            document.getElementById('adminAwardsArea').style.display = 'block';
+            autoFillAwards();
         }
+        function autoFillAwards() {
+            let validPlayers = currentTourneyData.filter(p => p.gross !== "未開球" && p.name).map(p => p.name);
+            let optionsHtml = '<option value="">(無/從缺)</option>';
+            validPlayers.forEach(p => optionsHtml += `<option value="${p}">${p}</option>`);
+
+            // 1. 初始化 18 個近洞獎
+            let ntpArea = document.getElementById('ntpArea');
+            if (ntpArea.innerHTML.trim() === "") {
+                let html = "";
+                for(let i=1; i<=18; i++) {
+                    html += `<div><label style="font-size:12px; color:#81c784;">第 ${i} 洞</label><select id="ntp_${i}" class="award-select ntp-select" style="margin-bottom:0; padding:6px; font-size:14px;">${optionsHtml}</select></div>`;
+                }
+                ntpArea.innerHTML = html;
+            } else {
+                document.querySelectorAll('.ntp-select').forEach(sel => { let oldVal = sel.value; sel.innerHTML = optionsHtml; sel.value = oldVal; });
+            }
+
+            // 2. 更新其他下拉選單的名單
+            document.querySelectorAll('.award-select:not(.ntp-select):not(.ld-player-select)').forEach(sel => {
+                let oldVal = sel.value; sel.innerHTML = optionsHtml; sel.value = oldVal;
+            });
+
+            // 3. 自動計算榮譽榜
+            let netSorted = [...currentTourneyData].filter(p => p.gross !== "未開球").sort((a,b) => a.netScore - b.netScore);
+            let grossSorted = [...currentTourneyData].filter(p => p.gross !== "未開球").sort((a,b) => a.gross - b.gross);
+            
+            if (grossSorted.length > 0) document.getElementById('awardGross1').value = grossSorted[0].name;
+            if (netSorted.length > 0) document.getElementById('awardNet1').value = netSorted[0].name;
+            if (netSorted.length > 1) document.getElementById('awardNet2').value = netSorted[1].name;
+            if (netSorted.length > 2) document.getElementById('awardNet3').value = netSorted[2].name;
+            if (netSorted.length >= 7) document.getElementById('awardLucky7').value = netSorted[6].name;
+            if (netSorted.length >= 4) document.getElementById('awardBb').value = netSorted[netSorted.length - 2].name;
+            if (netSorted.length >= 5) document.getElementById('awardBbp1').value = netSorted[netSorted.length - 3].name;
+        }
+
+        function addLdRow() {
+            let validPlayers = currentTourneyData.filter(p => p.gross !== "未開球" && p.name).map(p => p.name);
+            let optionsHtml = '<option value="">(選擇得獎者)</option>';
+            validPlayers.forEach(p => optionsHtml += `<option value="${p}">${p}</option>`);
+
+            let holeOpts = '<option value="">(洞號)</option>';
+            for(let i=1; i<=18; i++) holeOpts += `<option value="${i}">第 ${i} 洞</option>`;
+
+            let div = document.createElement('div');
+            div.style = "display:flex; gap:5px; margin-bottom:5px; align-items:center;";
+            div.className = "ld-row";
+            div.innerHTML = `
+                <select class="ld-hole-select" style="width:35%; margin-bottom:0; padding:6px; font-size:14px;">${holeOpts}</select>
+                <select class="award-select ld-player-select" style="width:55%; margin-bottom:0; padding:6px; font-size:14px;">${optionsHtml}</select>
+                <button onclick="this.parentElement.remove()" style="width:10%; padding:6px; background:transparent; color:#ef5350; border:none; box-shadow:none;"><i class="fas fa-times"></i></button>
+            `;
+            document.getElementById('ldArea').appendChild(div);
+        }
+        
         function updateHandicap(name, val) { let h = parseFloat(val) || 0; let idx = currentTourneyData.findIndex(p => p.name === name); if(idx !== -1) { currentTourneyData[idx].handicap = h; if (currentTourneyData[idx].gross !== "未開球") currentTourneyData[idx].netScore = (currentTourneyData[idx].gross - h).toFixed(1); } }
         function sortTourneyLeaderboard() { currentTourneyData.sort((a, b) => a.netScore - b.netScore); renderTourneyAdminBoard(); }
 
