@@ -1594,7 +1594,38 @@ function leaveRoom() {
 
         async function generateTeamReport() {
             if(!confirm("即將產生全隊報告！這會自動結算並封存所有房間。\n確定全隊都已經打完並確認過成績了嗎？")) return;
-            const res = await apiCall("generateTeamReport", { tourneyId: currentTourneyId, finalLeaderboard: currentTourneyData }, true, "產生全隊戰報...");
+            
+            // 收集榮譽榜
+            let honors = {
+                gross1: document.getElementById('awardGross1').value,
+                net1: document.getElementById('awardNet1').value,
+                net2: document.getElementById('awardNet2').value,
+                net3: document.getElementById('awardNet3').value,
+                lucky7: document.getElementById('awardLucky7').value,
+                bb: document.getElementById('awardBb').value,
+                bbp1: document.getElementById('awardBbp1').value
+            };
+            
+            // 收集近洞獎
+            let ntp = {};
+            for(let i=1; i<=18; i++) {
+                let val = document.getElementById(`ntp_${i}`).value;
+                if(val) ntp[i] = val;
+            }
+            
+            // 收集遠距獎
+            let ld = [];
+            document.querySelectorAll('.ld-row').forEach(row => {
+                let hole = row.querySelector('.ld-hole-select').value;
+                let player = row.querySelector('.ld-player-select').value;
+                if(hole && player) ld.push({hole: hole, player: player});
+            });
+
+            let specialAwards = { honors: honors, ntp: ntp, ld: ld };
+
+            // ⚠️ 將 specialAwards 放進 payload 傳給後端
+            const res = await apiCall("generateTeamReport", { tourneyId: currentTourneyId, finalLeaderboard: currentTourneyData, specialAwards: specialAwards }, true, "產生全隊戰報...");
+            
             if(res && res.reportId) { 
                 alert("🎉 全隊戰報已產生並封存完畢！為您跳轉至戰報畫面。");
                 window.history.pushState({treport: res.reportId}, "", "?treport=" + res.reportId + "&openExternalBrowser=1");
