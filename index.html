@@ -1605,19 +1605,25 @@ function leaveRoom() {
             autoFillAwards();
         }
 
-        // 💡 修正版：正確生成近洞獎洞號與下拉選單
+        // 💡 終極修正版：修復變數當機問題，確保榮譽榜能正常產生與儲存
         function autoFillAwards() {
             let validPlayers = currentTourneyData.filter(p => p.gross !== "未開球" && p.name).map(p => p.name);
             let optionsHtml = '<option value="">(無/從缺)</option>';
             validPlayers.forEach(p => optionsHtml += `<option value="${p}">${p}</option>`);
 
-            // 1. 初始化 18 個近洞獎
+            // 1. 預先記住原本的近洞獎選項 (避免覆蓋)
+            let oldNtpVals = {};
+            for(let i=1; i<=18; i++) {
+                let el = document.getElementById(`ntp_${i}`);
+                if (el) oldNtpVals[i] = el.value;
+            }
+
+            // 2. 重新生成 18 個近洞獎的選單
             let ntpArea = document.getElementById('ntpArea');
             let html = "";
             for(let i=1; i<=18; i++) {
-                let currentVal = document.getElementById(`ntp_${i}`) ? document.getElementById(`ntp_${i}`).value : "";
                 html += `<div style="margin-bottom:8px;">
-                    <label style="font-size:12px; color:#81c784; display:block; margin-bottom:2px;">🎯 第 ${i} 洞近洞獎</label>
+                    <label style="font-size:12px; color:#81c784; display:block; margin-bottom:2px;">🎯 第 ${i} 洞</label>
                     <select id="ntp_${i}" class="award-select ntp-select" style="width:100%; margin-bottom:0; padding:6px; font-size:14px; background:#2c2c2c; color:#fff; border:1px solid #444; border-radius:6px;">
                         ${optionsHtml}
                     </select>
@@ -1625,22 +1631,27 @@ function leaveRoom() {
             }
             ntpArea.innerHTML = html;
 
-            // 如果原本有選擇值的，還原選擇
+            // 3. 將原本的近洞獎選項填回去
             for(let i=1; i<=18; i++) {
                 let el = document.getElementById(`ntp_${i}`);
-                if(el && el.querySelector(`option[value="${currentVal}"]`)) {
-                    el.value = currentVal;
-                }
+                if(el && oldNtpVals[i]) el.value = oldNtpVals[i];
             }
 
-            // 2. 更新榮譽榜選單
+            // 4. 更新「榮譽榜」下拉選單的名單
             document.querySelectorAll('.award-select:not(.ntp-select):not(.ld-player-select)').forEach(sel => {
                 let oldVal = sel.value; 
                 sel.innerHTML = optionsHtml; 
                 if (oldVal) sel.value = oldVal;
             });
 
-            // 3. 自動預設帶入榮譽榜名次
+            // 5. 更新「遠距獎」下拉選單的名單 (若總幹事有新增)
+            document.querySelectorAll('.ld-player-select').forEach(sel => {
+                let oldVal = sel.value;
+                sel.innerHTML = optionsHtml;
+                if (oldVal) sel.value = oldVal;
+            });
+
+            // 6. 自動預設帶入榮譽榜名次 (只有當下拉框為空時才自動填入)
             let netSorted = [...currentTourneyData].filter(p => p.gross !== "未開球").sort((a,b) => a.netScore - b.netScore);
             let grossSorted = [...currentTourneyData].filter(p => p.gross !== "未開球").sort((a,b) => a.gross - b.gross);
             
@@ -1649,6 +1660,8 @@ function leaveRoom() {
             if (netSorted.length > 1 && !document.getElementById('awardNet2').value) document.getElementById('awardNet2').value = netSorted[1].name;
             if (netSorted.length > 2 && !document.getElementById('awardNet3').value) document.getElementById('awardNet3').value = netSorted[2].name;
             if (netSorted.length >= 7 && !document.getElementById('awardLucky7').value) document.getElementById('awardLucky7').value = netSorted[6].name;
+            
+            // BB 獎是倒數第二名, BB+1 是倒數第三名
             if (netSorted.length >= 4 && !document.getElementById('awardBb').value) document.getElementById('awardBb').value = netSorted[netSorted.length - 2].name;
             if (netSorted.length >= 5 && !document.getElementById('awardBbp1').value) document.getElementById('awardBbp1').value = netSorted[netSorted.length - 3].name;
         }
