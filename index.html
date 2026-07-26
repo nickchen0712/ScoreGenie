@@ -1691,6 +1691,7 @@ function leaveRoom() {
 
         async function adminDeleteTourney() { if(!confirm("⚠️ 警告：這將徹底刪除此賽事以及底下所有分組的成績！\n確定要刪除嗎？")) return; const res = await apiCall("deleteTournament", { tourneyId: currentTourneyId }, true, "刪除中..."); if(res) { alert(res.message); window.location.href = '?'; } }
 
+        // 💡 修正版：確保結算後能正確讀取 reportId 並強制自動跳轉
         async function generateTeamReport() {
             if(!confirm("即將產生全隊報告！這會自動結算並封存所有房間。\n確定全隊都已經打完並確認過成績了嗎？")) return;
             
@@ -1708,8 +1709,8 @@ function leaveRoom() {
             // 收集近洞獎
             let ntp = {};
             for(let i=1; i<=18; i++) {
-                let val = document.getElementById(`ntp_${i}`).value;
-                if(val) ntp[i] = val;
+                let el = document.getElementById(`ntp_${i}`);
+                if(el && el.value) ntp[i] = el.value;
             }
             
             // 收集遠距獎
@@ -1722,13 +1723,27 @@ function leaveRoom() {
 
             let specialAwards = { honors: honors, ntp: ntp, ld: ld };
 
-            // ⚠️ 將 specialAwards 放進 payload 傳給後端
-            const res = await apiCall("generateTeamReport", { tourneyId: currentTourneyId, finalLeaderboard: currentTourneyData, specialAwards: specialAwards }, true, "產生全隊戰報...");
+            // 呼叫 API 產生報告
+            const res = await apiCall("generateTeamReport", { 
+                tourneyId: currentTourneyId, 
+                finalLeaderboard: currentTourneyData, 
+                specialAwards: specialAwards 
+            }, true, "產生全隊戰報中...");
             
-            if(res && res.reportId) { 
-                alert("🎉 全隊戰報已產生並封存完畢！為您跳轉至戰報畫面。");
-                window.history.pushState({treport: res.reportId}, "", "?treport=" + res.reportId + "&openExternalBrowser=1");
-                loadTeamReport(res.reportId);
+            // 相容性判斷：確保無論 res 是包裹在哪一層，都能抓到 reportId
+            let targetReportId = null;
+            if (res && res.reportId) {
+                targetReportId = res.reportId;
+            } else if (res && res.data && res.data.reportId) {
+                targetReportId = res.data.reportId;
+            }
+
+            if(targetReportId) { 
+                alert("🎉 全隊戰報已成功產生！為您開啟戰報畫面。");
+                window.history.pushState({treport: targetReportId}, "", "?treport=" + targetReportId + "&openExternalBrowser=1");
+                loadTeamReport(targetReportId);
+            } else {
+                alert("⚠️ 戰報已產生，但跳轉遭遇問題，請重新整理頁面後在歷史紀錄中點選。");
             }
         }
 
