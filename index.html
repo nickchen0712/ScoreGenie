@@ -1604,6 +1604,8 @@ function leaveRoom() {
             document.getElementById('adminAwardsArea').style.display = 'block';
             autoFillAwards();
         }
+
+        // 💡 修正版：正確生成近洞獎洞號與下拉選單
         function autoFillAwards() {
             let validPlayers = currentTourneyData.filter(p => p.gross !== "未開球" && p.name).map(p => p.name);
             let optionsHtml = '<option value="">(無/從缺)</option>';
@@ -1611,32 +1613,44 @@ function leaveRoom() {
 
             // 1. 初始化 18 個近洞獎
             let ntpArea = document.getElementById('ntpArea');
-            if (ntpArea.innerHTML.trim() === "") {
-                let html = "";
-                for(let i=1; i<=18; i++) {
-                    html += `<div><label style="font-size:12px; color:#81c784;">第 ${i} 洞</label><select id="ntp_${i}" class="award-select ntp-select" style="margin-bottom:0; padding:6px; font-size:14px;">${optionsHtml}</select></div>`;
+            let html = "";
+            for(let i=1; i<=18; i++) {
+                let currentVal = document.getElementById(`ntp_${i}`) ? document.getElementById(`ntp_${i}`).value : "";
+                html += `<div style="margin-bottom:8px;">
+                    <label style="font-size:12px; color:#81c784; display:block; margin-bottom:2px;">🎯 第 ${i} 洞近洞獎</label>
+                    <select id="ntp_${i}" class="award-select ntp-select" style="width:100%; margin-bottom:0; padding:6px; font-size:14px; background:#2c2c2c; color:#fff; border:1px solid #444; border-radius:6px;">
+                        ${optionsHtml}
+                    </select>
+                </div>`;
+            }
+            ntpArea.innerHTML = html;
+
+            // 如果原本有選擇值的，還原選擇
+            for(let i=1; i<=18; i++) {
+                let el = document.getElementById(`ntp_${i}`);
+                if(el && el.querySelector(`option[value="${currentVal}"]`)) {
+                    el.value = currentVal;
                 }
-                ntpArea.innerHTML = html;
-            } else {
-                document.querySelectorAll('.ntp-select').forEach(sel => { let oldVal = sel.value; sel.innerHTML = optionsHtml; sel.value = oldVal; });
             }
 
-            // 2. 更新其他下拉選單的名單
+            // 2. 更新榮譽榜選單
             document.querySelectorAll('.award-select:not(.ntp-select):not(.ld-player-select)').forEach(sel => {
-                let oldVal = sel.value; sel.innerHTML = optionsHtml; sel.value = oldVal;
+                let oldVal = sel.value; 
+                sel.innerHTML = optionsHtml; 
+                if (oldVal) sel.value = oldVal;
             });
 
-            // 3. 自動計算榮譽榜
+            // 3. 自動預設帶入榮譽榜名次
             let netSorted = [...currentTourneyData].filter(p => p.gross !== "未開球").sort((a,b) => a.netScore - b.netScore);
             let grossSorted = [...currentTourneyData].filter(p => p.gross !== "未開球").sort((a,b) => a.gross - b.gross);
             
-            if (grossSorted.length > 0) document.getElementById('awardGross1').value = grossSorted[0].name;
-            if (netSorted.length > 0) document.getElementById('awardNet1').value = netSorted[0].name;
-            if (netSorted.length > 1) document.getElementById('awardNet2').value = netSorted[1].name;
-            if (netSorted.length > 2) document.getElementById('awardNet3').value = netSorted[2].name;
-            if (netSorted.length >= 7) document.getElementById('awardLucky7').value = netSorted[6].name;
-            if (netSorted.length >= 4) document.getElementById('awardBb').value = netSorted[netSorted.length - 2].name;
-            if (netSorted.length >= 5) document.getElementById('awardBbp1').value = netSorted[netSorted.length - 3].name;
+            if (grossSorted.length > 0 && !document.getElementById('awardGross1').value) document.getElementById('awardGross1').value = grossSorted[0].name;
+            if (netSorted.length > 0 && !document.getElementById('awardNet1').value) document.getElementById('awardNet1').value = netSorted[0].name;
+            if (netSorted.length > 1 && !document.getElementById('awardNet2').value) document.getElementById('awardNet2').value = netSorted[1].name;
+            if (netSorted.length > 2 && !document.getElementById('awardNet3').value) document.getElementById('awardNet3').value = netSorted[2].name;
+            if (netSorted.length >= 7 && !document.getElementById('awardLucky7').value) document.getElementById('awardLucky7').value = netSorted[6].name;
+            if (netSorted.length >= 4 && !document.getElementById('awardBb').value) document.getElementById('awardBb').value = netSorted[netSorted.length - 2].name;
+            if (netSorted.length >= 5 && !document.getElementById('awardBbp1').value) document.getElementById('awardBbp1').value = netSorted[netSorted.length - 3].name;
         }
 
         function addLdRow() {
