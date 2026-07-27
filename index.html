@@ -286,10 +286,9 @@
                         <div><label style="font-size:12px; color:#aaa;">BB獎 (倒數第2)</label><select id="awardBb" class="award-select" style="margin-bottom:0; padding:6px; font-size:14px;"></select></div>
                     </div>
 
-                    <h5 style="color:#81c784; margin:15px 0 5px 0;">🎯 近洞獎 (18洞皆可設定)</h5>
-                    <div id="ntpArea" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px; max-height: 250px; overflow-y:auto; padding-right:5px; border:1px solid #333; padding:10px; border-radius:6px;">
-                        <!-- JS 動態生成 1~18 洞 -->
-                    </div>
+                    <h5 style="color:#81c784; margin:15px 0 5px 0;">🎯 近洞獎 (請自行新增洞號)</h5>
+                    <div id="ntpArea" style="margin-bottom:10px;"></div>
+                    <button onclick="addNtpRow()" class="btn-gray" style="font-size:12px; padding:6px 12px; width:auto; margin:0;"><i class="fas fa-plus"></i> 新增近洞獎洞號</button>
 
                     <h5 style="color:#ffb74d; margin:15px 0 5px 0;">🚀 遠距獎 (請自行新增洞號)</h5>
                     <div id="ldArea" style="margin-bottom:10px;"></div>
