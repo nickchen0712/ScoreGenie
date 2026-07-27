@@ -1670,22 +1670,77 @@ function leaveRoom() {
         }
         
         function updateHandicap(name, val) { let h = parseFloat(val) || 0; let idx = currentTourneyData.findIndex(p => p.name === name); if(idx !== -1) { currentTourneyData[idx].handicap = h; if (currentTourneyData[idx].gross !== "未開球") currentTourneyData[idx].netScore = (currentTourneyData[idx].gross - h).toFixed(1); } }
-        function sortTourneyLeaderboard() { currentTourneyData.sort((a, b) => a.netScore - b.netScore); renderTourneyAdminBoard(); }
-
+        
         function drawPeoriaHoles() { let holes = []; while(holes.length < 6) { let r = Math.floor(Math.random() * 18) + 1; if(holes.indexOf(r) === -1) holes.push(r); } document.getElementById('peoriaHoles').value = holes.sort((a,b) => a-b).join(', '); }
+
+// 💡 修正版：修復 API 資料遺失與數字型態衝突的問題
         async function calcNewNewPeoria() {
-            let val = document.getElementById('peoriaHoles').value; let hiddenHoles = val.split(/[,，\s]+/).map(Number).filter(n => n >= 1 && n <= 18);
+            let val = document.getElementById('peoriaHoles').value; 
+            let hiddenHoles = val.split(/[,，\s]+/).map(Number).filter(n => n >= 1 && n <= 18);
             if(hiddenHoles.length !== 6) return alert("請正確輸入 6 個 1~18 的隱藏洞號！"); 
-            const res = await apiCall("getTournamentDashboard", { tourneyId: currentTourneyId }, true, "讀取最新成績..."); if (!res) return;
-            currentTourneyPars = res.pars || new Array(18).fill(4); currentTourneyData = res.players.map(p => ({ ...p, netScore: p.gross === "未開球" ? 999 : (p.gross - 0), handicap: 0, pin: p.pin })); 
+            
+            // 1. 備份原有的詳細成績，以防 API 回傳時缺漏
+            let oldScoresMap = {};
+            if (typeof currentTourneyData !== 'undefined') {
+                currentTourneyData.forEach(p => { oldScoresMap[p.name] = p.scores; });
+            }
+
+            const res = await apiCall("getTournamentDashboard", { tourneyId: currentTourneyId }, true, "計算新新貝利亞..."); 
+            if (!res) return;
+            
+            currentTourneyPars = res.pars || new Array(18).fill(4); 
             let totalPar = currentTourneyPars.reduce((a,b)=>a+b, 0) || 72;
+            
+            // 2. 合併資料
+            currentTourneyData = res.players.map(p => {
+                let pScores = p.scores || oldScoresMap[p.name]; // 確保 scores 不會遺失
+                return { ...p, scores: pScores, netScore: p.gross === "未開球" ? 999 : (p.gross - 0), handicap: 0, pin: p.pin };
+            }); 
+            
+            let hasScores = false;
+
             currentTourneyData.forEach(p => {
-                if (p.gross === "未開球" || !p.scores || p.scores.length < 18) { p.handicap = 0; return; } let sum12 = 0;
-                for (let i = 0; i < 18; i++) { let holeNum = i + 1; if (!hiddenHoles.includes(holeNum)) { let cPar = parseInt(currentTourneyPars[i]) || 4; let maxScore = cPar * 2; let holeScore = parseInt(p.scores[i]) || maxScore; if (holeScore > maxScore) holeScore = maxScore; sum12 += holeScore; } }
-                let hdcp = (sum12 * 1.5 - totalPar) * 0.8; hdcp = Math.round(hdcp * 10) / 10; if (hdcp < 0) hdcp = 0; if (hdcp > 36) hdcp = 36; p.handicap = hdcp; p.netScore = (p.gross - hdcp).toFixed(1);
-            }); sortTourneyLeaderboard();
+                if (p.gross === "未開球" || !p.scores || p.scores.length < 18) { 
+                    p.handicap = 0; 
+                    return; 
+                } 
+                hasScores = true;
+                let sum12 = 0;
+                for (let i = 0; i < 18; i++) { 
+                    let holeNum = i + 1; 
+                    if (!hiddenHoles.includes(holeNum)) { 
+                        let cPar = parseInt(currentTourneyPars[i]) || 4; 
+                        let maxScore = cPar * 2; 
+                        let holeScore = parseInt(p.scores[i]) || maxScore; 
+                        if (holeScore > maxScore) holeScore = maxScore; 
+                        sum12 += holeScore; 
+                    } 
+                }
+                let hdcp = (sum12 * 1.5 - totalPar) * 0.8; 
+                hdcp = Math.round(hdcp * 10) / 10; 
+                if (hdcp < 0) hdcp = 0; 
+                if (hdcp > 36) hdcp = 36; 
+                
+                p.handicap = hdcp; 
+                // 3. 確保淨桿轉為純數字 (parseFloat)，避免排序卡住
+                p.netScore = parseFloat((p.gross - hdcp).toFixed(1)); 
+            }); 
+            
+            if (!hasScores) {
+                alert("⚠️ 無法計算：系統讀取不到球員的 18 洞成績。");
+            }
+
+            sortTourneyLeaderboard();
         }
 
+        // 💡 確保排序與渲染觸發正常
+        function sortTourneyLeaderboard() {
+            if (!currentTourneyData) return;
+            // 強制確保用數字比大小
+            currentTourneyData.sort((a, b) => parseFloat(a.netScore) - parseFloat(b.netScore));
+            renderTourneyAdminBoard();
+        }
+        
         async function adminDeleteTourney() { if(!confirm("⚠️ 警告：這將徹底刪除此賽事以及底下所有分組的成績！\n確定要刪除嗎？")) return; const res = await apiCall("deleteTournament", { tourneyId: currentTourneyId }, true, "刪除中..."); if(res) { alert(res.message); window.location.href = '?'; } }
 
         // 3. 💡 替換：產生戰報 (改變收集近洞獎的方式)
