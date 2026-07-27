@@ -1688,29 +1688,23 @@ function leaveRoom() {
 
         async function adminDeleteTourney() { if(!confirm("⚠️ 警告：這將徹底刪除此賽事以及底下所有分組的成績！\n確定要刪除嗎？")) return; const res = await apiCall("deleteTournament", { tourneyId: currentTourneyId }, true, "刪除中..."); if(res) { alert(res.message); window.location.href = '?'; } }
 
-        // 💡 修正版：確保結算後能正確讀取 reportId 並強制自動跳轉
+        // 3. 💡 替換：產生戰報 (改變收集近洞獎的方式)
         async function generateTeamReport() {
-            if(!confirm("即將產生全隊報告！這會自動結算並封存所有房間。\n確定全隊都已經打完並確認過成績了嗎？")) return;
+            if(!confirm("即將產生全隊報告！確定全隊都已經打完並確認過成績了嗎？")) return;
             
-            // 收集榮譽榜
             let honors = {
-                gross1: document.getElementById('awardGross1').value,
-                net1: document.getElementById('awardNet1').value,
-                net2: document.getElementById('awardNet2').value,
-                net3: document.getElementById('awardNet3').value,
-                lucky7: document.getElementById('awardLucky7').value,
-                bb: document.getElementById('awardBb').value,
-                bbp1: document.getElementById('awardBbp1').value
+                gross1: document.getElementById('awardGross1').value, net1: document.getElementById('awardNet1').value,
+                net2: document.getElementById('awardNet2').value, net3: document.getElementById('awardNet3').value,
+                lucky7: document.getElementById('awardLucky7').value, bb: document.getElementById('awardBb').value, bbp1: document.getElementById('awardBbp1').value
             };
             
-            // 收集近洞獎
-            let ntp = {};
-            for(let i=1; i<=18; i++) {
-                let el = document.getElementById(`ntp_${i}`);
-                if(el && el.value) ntp[i] = el.value;
-            }
+            let ntp = [];
+            document.querySelectorAll('.ntp-row').forEach(row => {
+                let hole = row.querySelector('.ntp-hole-select').value;
+                let player = row.querySelector('.ntp-player-select').value;
+                if(hole && player) ntp.push({hole: hole, player: player});
+            });
             
-            // 收集遠距獎
             let ld = [];
             document.querySelectorAll('.ld-row').forEach(row => {
                 let hole = row.querySelector('.ld-hole-select').value;
@@ -1719,32 +1713,17 @@ function leaveRoom() {
             });
 
             let specialAwards = { honors: honors, ntp: ntp, ld: ld };
-
-            // 呼叫 API 產生報告
-            const res = await apiCall("generateTeamReport", { 
-                tourneyId: currentTourneyId, 
-                finalLeaderboard: currentTourneyData, 
-                specialAwards: specialAwards 
-            }, true, "產生全隊戰報中...");
+            const res = await apiCall("generateTeamReport", { tourneyId: currentTourneyId, finalLeaderboard: currentTourneyData, specialAwards: specialAwards }, true, "產生全隊戰報中...");
             
-            // 相容性判斷：確保無論 res 是包裹在哪一層，都能抓到 reportId
-            let targetReportId = null;
-            if (res && res.reportId) {
-                targetReportId = res.reportId;
-            } else if (res && res.data && res.data.reportId) {
-                targetReportId = res.data.reportId;
-            }
-
+            let targetReportId = (res && res.reportId) ? res.reportId : (res && res.data && res.data.reportId ? res.data.reportId : null);
             if(targetReportId) { 
-                alert("🎉 全隊戰報已成功產生！為您開啟戰報畫面。");
+                alert("🎉 全隊戰報已成功產生！");
                 window.history.pushState({treport: targetReportId}, "", "?treport=" + targetReportId + "&openExternalBrowser=1");
                 loadTeamReport(targetReportId);
-            } else {
-                alert("⚠️ 戰報已產生，但跳轉遭遇問題，請重新整理頁面後在歷史紀錄中點選。");
             }
         }
 
-        // 💡 修改：將榮譽榜與鷹鳥榜渲染到畫面上
+        // 4. 💡 替換：讀取戰報 (改變鷹鳥與近洞獎的渲染格式)
         async function loadTeamReport(reportId) {
             navTo('page-team-report'); 
             currentViewedReportId = reportId; 
@@ -1752,40 +1731,21 @@ function leaveRoom() {
             const res = await apiCall("getTeamReportData", { reportId: reportId }, true, "載入全隊報告..."); if(!res) return;
             document.getElementById('trCourseDate').textContent = "🏟️ " + res.courseName + " ｜ 📅 " + new Date(res.date).toLocaleDateString();
             
-            // --- 渲染賽事榮譽榜 ---
             if (res.specialAwards) {
                 let honors = res.specialAwards.honors || {};
                 let honorsHtml = "";
-                let awardMap = {
-                    gross1: { title: "總桿冠軍", color: "#ffd700" },
-                    net1: { title: "淨桿冠軍", color: "#81d4fa" },
-                    net2: { title: "淨桿亞軍", color: "#a5d6a7" },
-                    net3: { title: "淨桿季軍", color: "#ffb74d" },
-                    lucky7: { title: "Lucky 7", color: "#ce93d8" },
-                    bbp1: { title: "BB+1 獎", color: "#f48fb1" },
-                    bb: { title: "BB 獎", color: "#ff8a80" }
-                };
-
+                let awardMap = { gross1: { title: "總桿冠軍", color: "#ffd700" }, net1: { title: "淨桿冠軍", color: "#81d4fa" }, net2: { title: "淨桿亞軍", color: "#a5d6a7" }, net3: { title: "淨桿季軍", color: "#ffb74d" }, lucky7: { title: "Lucky 7", color: "#ce93d8" }, bbp1: { title: "BB+1 獎", color: "#f48fb1" }, bb: { title: "BB 獎", color: "#ff8a80" } };
                 for (let key in awardMap) {
-                    if (honors[key]) {
-                        honorsHtml += `<div style="background:#252525; padding:10px; border-radius:8px; border-left:4px solid ${awardMap[key].color};">
-                            <div style="font-size:12px; color:#aaa;">${awardMap[key].title}</div>
-                            <div style="font-size:16px; font-weight:bold; color:#fff;">${honors[key]}</div>
-                        </div>`;
-                    }
+                    if (honors[key]) honorsHtml += `<div style="background:#252525; padding:10px; border-radius:8px; border-left:4px solid ${awardMap[key].color};"><div style="font-size:12px; color:#aaa;">${awardMap[key].title}</div><div style="font-size:16px; font-weight:bold; color:#fff;">${honors[key]}</div></div>`;
                 }
-                if (honorsHtml !== "") {
-                    document.getElementById('trHonorsContent').innerHTML = honorsHtml;
-                    document.getElementById('trHonorsCard').style.display = 'block';
-                }
+                if (honorsHtml) { document.getElementById('trHonorsContent').innerHTML = honorsHtml; document.getElementById('trHonorsCard').style.display = 'block'; }
 
-                // --- 渲染近洞與遠距獎 ---
                 let ntpLdHtml = "";
-                let ntp = res.specialAwards.ntp || {};
-                if (Object.keys(ntp).length > 0) {
+                let ntp = res.specialAwards.ntp;
+                if (ntp && ntp.length > 0) {
                     ntpLdHtml += `<div style="margin-bottom:12px;"><strong style="color:#81c784;">🎯 近洞獎得主：</strong><br>`;
                     let ntpArr = [];
-                    for(let h in ntp) ntpArr.push(`第${h}洞: <span style="color:#fff;">${ntp[h]}</span>`);
+                    ntp.forEach(item => ntpArr.push(`第${item.hole}洞: <span style="color:#fff;">${item.player}</span>`));
                     ntpLdHtml += `<span style="font-size:14px; color:#aaa; line-height:1.8;">${ntpArr.join("、 ")}</span></div>`;
                 }
 
@@ -1797,34 +1757,29 @@ function leaveRoom() {
                     ntpLdHtml += `<span style="font-size:14px; color:#aaa; line-height:1.8;">${ldArr.join("、 ")}</span></div>`;
                 }
 
-                if (ntpLdHtml !== "") {
-                    document.getElementById('trNtpLdContent').innerHTML = ntpLdHtml;
-                    document.getElementById('trSpecialAwardsCard').style.display = 'block';
-                }
+                if (ntpLdHtml) { document.getElementById('trNtpLdContent').innerHTML = ntpLdHtml; document.getElementById('trSpecialAwardsCard').style.display = 'block'; }
             }
 
-            // --- 渲染鷹鳥榜 ---
-            if ((res.eagles && res.eagles.length > 0) || (res.birdies && res.birdies.length > 0)) {
-                let eaglesHtml = "", birdiesHtml = "";
-                
-                if (res.eagles && res.eagles.length > 0) {
-                    res.eagles.forEach(e => eaglesHtml += `<div class="hl-item hl-eagle">🦅 ${e}</div>`);
-                } else { 
-                    eaglesHtml = '<div class="hl-item" style="color:#777;">🦅 本場賽事尚無老鷹</div>'; 
+            // 💡 渲染全新格式的鷹鳥榜 (支援 Name (Count): 1st、5th)
+            const getOrdinal = (n) => { let s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
+            const renderBirds = (dataObj, icon, hlClass) => {
+                if(!dataObj || Object.keys(dataObj).length === 0) return null;
+                let html = "";
+                for(let p in dataObj) {
+                    let count = dataObj[p].length;
+                    let holesStr = dataObj[p].map(h => getOrdinal(h)).join("、");
+                    html += `<div class="hl-item ${hlClass}">${icon} ${p} (${count})：${holesStr}</div>`;
                 }
+                return html;
+            };
 
-                if (res.birdies && res.birdies.length > 0) {
-                    res.birdies.forEach(b => birdiesHtml += `<div class="hl-item hl-birdie">🕊️ ${b}</div>`);
-                } else { 
-                    birdiesHtml = '<div class="hl-item" style="color:#777;">🕊️ 本場賽事尚無抓鳥</div>'; 
-                }
+            let eaglesHtml = renderBirds(res.eagles, "🦅", "hl-eagle") || '<div class="hl-item" style="color:#777;">🦅 本場賽事尚無老鷹</div>';
+            let birdiesHtml = renderBirds(res.birdies, "🕊️", "hl-birdie") || '<div class="hl-item" style="color:#777;">🕊️ 本場賽事尚無抓鳥</div>';
+            
+            document.getElementById('trEaglesArea').innerHTML = eaglesHtml;
+            document.getElementById('trBirdiesArea').innerHTML = birdiesHtml;
+            document.getElementById('trBirdieEagleCard').style.display = 'block';
 
-                document.getElementById('trEaglesArea').innerHTML = eaglesHtml;
-                document.getElementById('trBirdiesArea').innerHTML = birdiesHtml;
-                document.getElementById('trBirdieEagleCard').style.display = 'block';
-            }
-
-            // --- 渲染總成績板 ---
             let finalData = res.finalLeaderboard || []; 
             let grossSorted = [...finalData].sort((a,b) => a.gross - b.gross); 
             let netSorted = [...finalData].sort((a,b) => a.netScore - b.netScore);
@@ -1835,15 +1790,6 @@ function leaveRoom() {
                 html += `<tr><td style="font-weight:bold; color:#81c784; font-size:16px;">${i+1}</td><td style="font-weight:bold; color:#ffd700;">${grossRank}</td><td style="font-weight:bold; text-align:center;">${formatNameForDisplay(p.name)}</td><td>${p.gross}</td><td>${p.handicap}</td><td style="color:#81c784; font-weight:bold;">${p.netScore}</td></tr>`; 
             });
             document.querySelector('#trFinalBoard tbody').innerHTML = html;
-            
-            // --- 渲染單組戰報連結 ---
-            let linksHtml = ""; 
-            if(res.groupReports) { 
-                res.groupReports.forEach((g, i) => { 
-                    linksHtml += `<div style="background:#252525; padding:10px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;"><span style="color:#ce93d8; font-weight:bold;">第 ${i+1} 組 (${g.pin})</span><button onclick="navToGroupReport('${g.reportId}', '${reportId}')" style="background:#0277bd; color:white; border:none; padding:8px 15px; border-radius:5px; font-size:12px; cursor:pointer;">查看單組戰報</button></div>`; 
-                }); 
-            } 
-            document.getElementById('trGroupLinks').innerHTML = linksHtml;
         }
 
         function navToGroupReport(groupId, parentId) {
