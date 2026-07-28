@@ -1673,16 +1673,16 @@ function leaveRoom() {
         
         function drawPeoriaHoles() { let holes = []; while(holes.length < 6) { let r = Math.floor(Math.random() * 18) + 1; if(holes.indexOf(r) === -1) holes.push(r); } document.getElementById('peoriaHoles').value = holes.sort((a,b) => a-b).join(', '); }
 
-// 💡 修正版：修復 API 資料遺失與數字型態衝突的問題
+// 💡 終極修正版：相容物件/陣列格式，放寬 18 洞長度限制
         async function calcNewNewPeoria() {
             let val = document.getElementById('peoriaHoles').value; 
             let hiddenHoles = val.split(/[,，\s]+/).map(Number).filter(n => n >= 1 && n <= 18);
             if(hiddenHoles.length !== 6) return alert("請正確輸入 6 個 1~18 的隱藏洞號！"); 
             
-            // 1. 備份原有的詳細成績，以防 API 回傳時缺漏
+            // 1. 備份原有成績 (防呆機制)
             let oldScoresMap = {};
-            if (typeof currentTourneyData !== 'undefined') {
-                currentTourneyData.forEach(p => { oldScoresMap[p.name] = p.scores; });
+            if (typeof currentTourneyData !== 'undefined' && currentTourneyData) {
+                currentTourneyData.forEach(p => { if (p.scores) oldScoresMap[p.name] = p.scores; });
             }
 
             const res = await apiCall("getTournamentDashboard", { tourneyId: currentTourneyId }, true, "計算新新貝利亞..."); 
@@ -1691,45 +1691,60 @@ function leaveRoom() {
             currentTourneyPars = res.pars || new Array(18).fill(4); 
             let totalPar = currentTourneyPars.reduce((a,b)=>a+b, 0) || 72;
             
-            // 2. 合併資料
+            let hasScores = false;
+
+            // 2. 合併最新資料與成績備份
             currentTourneyData = res.players.map(p => {
-                let pScores = p.scores || oldScoresMap[p.name]; // 確保 scores 不會遺失
+                let pScores = p.scores || oldScoresMap[p.name] || []; 
                 return { ...p, scores: pScores, netScore: p.gross === "未開球" ? 999 : (p.gross - 0), handicap: 0, pin: p.pin };
             }); 
             
-            let hasScores = false;
-
             currentTourneyData.forEach(p => {
-                if (p.gross === "未開球" || !p.scores || p.scores.length < 18) { 
+                // 💡 放寬限制：只要有開球，就算成績陣列格式異常，也強制進行計算
+                if (p.gross === "未開球") { 
                     p.handicap = 0; 
                     return; 
                 } 
+                
                 hasScores = true;
                 let sum12 = 0;
+                let safeScores = p.scores || {}; // 確保即使沒抓到 scores 也不會報錯
+
                 for (let i = 0; i < 18; i++) { 
                     let holeNum = i + 1; 
                     if (!hiddenHoles.includes(holeNum)) { 
                         let cPar = parseInt(currentTourneyPars[i]) || 4; 
                         let maxScore = cPar * 2; 
-                        let holeScore = parseInt(p.scores[i]) || maxScore; 
+                        
+                        // 智慧讀取：同時支援陣列 [5, 4] 或物件 {"0": 5, "1": 4} 的格式
+                        let rawScore = safeScores[i];
+                        if (rawScore === undefined && safeScores[i.toString()] !== undefined) {
+                            rawScore = safeScores[i.toString()];
+                        }
+
+                        // 如果該洞完全沒成績，則預設以最高桿 (Double Par) 代入，防爆桿
+                        let holeScore = parseInt(rawScore) || maxScore; 
                         if (holeScore > maxScore) holeScore = maxScore; 
+                        
                         sum12 += holeScore; 
                     } 
                 }
+                
                 let hdcp = (sum12 * 1.5 - totalPar) * 0.8; 
                 hdcp = Math.round(hdcp * 10) / 10; 
                 if (hdcp < 0) hdcp = 0; 
                 if (hdcp > 36) hdcp = 36; 
                 
                 p.handicap = hdcp; 
-                // 3. 確保淨桿轉為純數字 (parseFloat)，避免排序卡住
+                // 確保淨桿為純數字，讓後續的榮譽榜排序不會卡住
                 p.netScore = parseFloat((p.gross - hdcp).toFixed(1)); 
             }); 
             
             if (!hasScores) {
-                alert("⚠️ 無法計算：系統讀取不到球員的 18 洞成績。");
+                alert("⚠️ 系統讀取不到任何成績資訊，請確認大家是否已經輸入成績。");
             }
 
+            // 觸發重新排名與榮譽榜分配
             sortTourneyLeaderboard();
         }
 
