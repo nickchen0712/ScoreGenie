@@ -1630,6 +1630,7 @@ function leaveRoom() {
         }
 
         // 1. 💡 替換：自動預設獎項 (移除 18 洞生成的邏輯)
+        // 💡 修改版：BB+1 變更為倒數第一名 (最後一名)
         function autoFillAwards() {
             let validPlayers = currentTourneyData.filter(p => p.gross !== "未開球" && p.name).map(p => p.name);
             let optionsHtml = '<option value="">(選擇得獎者)</option>';
@@ -1643,18 +1644,23 @@ function leaveRoom() {
             });
 
             // 自動預設帶入榮譽榜名次
-            let netSorted = [...currentTourneyData].filter(p => p.gross !== "未開球").sort((a,b) => a.netScore - b.netScore);
-            let grossSorted = [...currentTourneyData].filter(p => p.gross !== "未開球").sort((a,b) => a.gross - b.gross);
+            let netSorted = [...currentTourneyData].filter(p => p.gross !== "未開球").sort((a,b) => parseFloat(a.netScore) - parseFloat(b.netScore));
+            let grossSorted = [...currentTourneyData].filter(p => p.gross !== "未開球").sort((a,b) => parseFloat(a.gross) - parseFloat(b.gross));
             
             if (grossSorted.length > 0 && !document.getElementById('awardGross1').value) document.getElementById('awardGross1').value = grossSorted[0].name;
             if (netSorted.length > 0 && !document.getElementById('awardNet1').value) document.getElementById('awardNet1').value = netSorted[0].name;
             if (netSorted.length > 1 && !document.getElementById('awardNet2').value) document.getElementById('awardNet2').value = netSorted[1].name;
             if (netSorted.length > 2 && !document.getElementById('awardNet3').value) document.getElementById('awardNet3').value = netSorted[2].name;
             if (netSorted.length >= 7 && !document.getElementById('awardLucky7').value) document.getElementById('awardLucky7').value = netSorted[6].name;
-            if (netSorted.length >= 4 && !document.getElementById('awardBb').value) document.getElementById('awardBb').value = netSorted[netSorted.length - 2].name;
-            if (netSorted.length >= 5 && !document.getElementById('awardBbp1').value) document.getElementById('awardBbp1').value = netSorted[netSorted.length - 1].name;
+            
+            // 💡 關鍵修改：BB 獎為倒數第二名，BB+1 為倒數第一名
+            if (netSorted.length >= 2 && !document.getElementById('awardBb').value) {
+                document.getElementById('awardBb').value = netSorted[netSorted.length - 2].name;
+            }
+            if (netSorted.length >= 1 && !document.getElementById('awardBbp1').value) {
+                document.getElementById('awardBbp1').value = netSorted[netSorted.length - 1].name;
+            }
         }
-
         // 💡 新增：強制清空並根據最新淨桿重新分配榮譽榜
         function forceAutoFillAwards() {
             if (!confirm("確定要依照目前的最新成績，重新分配冠亞季軍與 BB 獎嗎？\n(這會覆蓋您手動修改過的榮譽榜名單)")) return;
