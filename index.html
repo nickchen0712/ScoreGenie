@@ -1655,6 +1655,26 @@ function leaveRoom() {
             if (netSorted.length >= 5 && !document.getElementById('awardBbp1').value) document.getElementById('awardBbp1').value = netSorted[netSorted.length - 1].name;
         }
 
+        // 💡 新增：強制清空並根據最新淨桿重新分配榮譽榜
+        function forceAutoFillAwards() {
+            if (!confirm("確定要依照目前的最新成績，重新分配冠亞季軍與 BB 獎嗎？\n(這會覆蓋您手動修改過的榮譽榜名單)")) return;
+            
+            // 1. 強制清空榮譽榜現有的選擇
+            document.getElementById('awardGross1').value = "";
+            document.getElementById('awardNet1').value = "";
+            document.getElementById('awardNet2').value = "";
+            document.getElementById('awardNet3').value = "";
+            document.getElementById('awardLucky7').value = "";
+            document.getElementById('awardBb').value = "";
+            document.getElementById('awardBbp1').value = "";
+            
+            // 2. 呼叫自動分配邏輯
+            autoFillAwards();
+            
+            // 3. 提示完成
+            alert("✅ 榮譽榜已根據最新排名重新分配完畢！");
+        }
+
         // 2. 💡 新增：動態產生近洞獎列
         function addNtpRow() {
             let validPlayers = currentTourneyData.filter(p => p.gross !== "未開球" && p.name).map(p => p.name);
