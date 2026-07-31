@@ -1204,7 +1204,7 @@ function leaveRoom() {
             if(!code) return alert("請輸入 Pass Code 開通碼");
             if(!currentFirstPin) return alert("系統尚未載入房間資料，請重新整理後再試！");
             
-            const res = await apiCall("unlockRoom", { pin: currentFirstPin, code: code }, true, "驗證代碼並開通賽事...");
+            const res = await apiCall("unlockRoom", { pin: currentTourneyId, code: code }, true, "驗證代碼並開通賽事...");
             if (res && res.success) {
                 alert("🎉 全場賽事已成功升級為「尊榮版」！所有組別皆可使用進階功能！");
                 document.getElementById('adminPremiumUnlockBox').style.display = 'none';
