@@ -1305,72 +1305,96 @@ function leaveRoom() {
 
         async function refreshSetupMatchups() { let players = []; for(let i=0; i<4; i++) players.push(document.getElementById(`sp_${i}`).value); let initRanks = [ document.getElementById('initRank1').value, document.getElementById('initRank2').value, document.getElementById('initRank3').value, document.getElementById('initRank4').value ]; const res = await apiCall("saveSetupData", { pin: currentPin, players: players, handicaps: [], dynMode: "None", initRank: initRanks }, false, "更新組合..."); if (res) loadSetupData(); }
         
+        // 💡 最強防護版：單組自動帶入讓桿
         async function autoFillHandicaps() { 
             var btn = document.getElementById("adminAutoFillBtn"); 
+            if (!btn) return;
             var orig = btn.innerHTML; 
-            btn.disabled = true; 
-            btn.innerHTML = '<i class="fas fa-hourglass-half"></i> 查詢中...'; 
             
-            var matchups = []; 
-            var labels = document.querySelectorAll(".setup-handicap-label"); 
-            labels.forEach(lbl => matchups.push(lbl.textContent)); 
-            
-            if (matchups.length === 0) {
-                alert("請先輸入球員名單並更新組合！");
+            try {
+                btn.disabled = true; 
+                btn.innerHTML = '<i class="fas fa-hourglass-half"></i> 查詢中...'; 
+                
+                var matchups = []; 
+                var labels = document.querySelectorAll(".setup-handicap-label"); 
+                labels.forEach(lbl => matchups.push(lbl.textContent)); 
+                
+                if (matchups.length === 0) {
+                    alert("請先輸入球員名單並更新組合！");
+                    btn.disabled = false; btn.innerHTML = orig; 
+                    return;
+                }
+
+                const res = await apiCall("fetchExternalHandicaps", { matchups: matchups }, false, "抓取資料..."); 
+                
+                if (res && res.handicaps) { 
+                    var inputs = document.querySelectorAll(".setup-handicap-input"); 
+                    var fillCount = 0; 
+                    inputs.forEach((input, i) => { 
+                        if (res.handicaps[i] !== "" && res.handicaps[i] !== null && res.handicaps[i] !== undefined) { 
+                            input.value = res.handicaps[i]; 
+                            fillCount++; 
+                        } 
+                    }); 
+                    if (fillCount === 0) alert("⚠️ 找不到對應的讓桿資料！請確認表格中是否有這些球員的對戰紀錄。"); 
+                    else alert(`✅ 成功帶入 ${fillCount} 筆讓桿資料！`);
+                } 
+            } catch (e) {
+                console.error("AutoFill Error:", e);
+                alert("查詢時發生錯誤：" + e.message);
+            } finally {
                 btn.disabled = false; 
                 btn.innerHTML = orig; 
-                return;
             }
-
-            const res = await apiCall("fetchExternalHandicaps", { matchups: matchups }, false, "抓取資料..."); 
-            
-            if (res && res.handicaps) { 
-                var inputs = document.querySelectorAll(".setup-handicap-input"); 
-                var fillCount = 0; 
-                inputs.forEach((input, i) => { 
-                    if (res.handicaps[i] !== "" && res.handicaps[i] !== null) { 
-                        input.value = res.handicaps[i]; 
-                        fillCount++; 
-                    } 
-                }); 
-                if (fillCount === 0) alert("找不到對應的讓桿資料！"); 
-            } 
-            btn.disabled = false; 
-            btn.innerHTML = orig; 
         }
 
+        // 💡 最強防護版：批次自動帶入讓桿 (自動過濾 3 人組的空缺)
         async function batchAutoFillHandicaps() { 
             var btn = document.getElementById("batchAutoFillBtn"); 
+            if (!btn) return;
             var orig = btn.innerHTML; 
-            btn.disabled = true; 
-            btn.innerHTML = '<i class="fas fa-hourglass-half"></i> 查詢中...'; 
             
-            var matchups = []; 
-            var labelElements = document.querySelectorAll(".batch-lbl"); 
-            labelElements.forEach(lbl => matchups.push(lbl.textContent)); 
-            
-            if (matchups.length === 0) {
+            try {
+                btn.disabled = true; 
+                btn.innerHTML = '<i class="fas fa-hourglass-half"></i> 查詢中...'; 
+                
+                var matchups = []; 
+                // 💡 關鍵修正：只抓取「沒有被隱藏 (display !== none)」的對戰組合
+                var labelElements = Array.from(document.querySelectorAll(".batch-lbl")).filter(lbl => {
+                    let parentDiv = lbl.closest('div[id^="hwrap_"]');
+                    return parentDiv && parentDiv.style.display !== 'none';
+                });
+                
+                labelElements.forEach(lbl => matchups.push(lbl.textContent)); 
+                
+                if (matchups.length === 0) {
+                    alert("目前沒有任何有效的對戰組合！");
+                    btn.disabled = false; btn.innerHTML = orig; 
+                    return;
+                }
+
+                const res = await apiCall("fetchExternalHandicaps", { matchups: matchups }, false, "抓取資料..."); 
+                
+                if (res && res.handicaps) { 
+                    var fillCount = 0; 
+                    labelElements.forEach((lbl, i) => { 
+                        let pin = lbl.dataset.pin; 
+                        let idx = lbl.dataset.idx; 
+                        if (res.handicaps[i] !== "" && res.handicaps[i] !== null && res.handicaps[i] !== undefined) { 
+                            document.getElementById(`h_${pin}_${idx}`).value = res.handicaps[i]; 
+                            fillCount++; 
+                        } 
+                    }); 
+                    if (fillCount === 0) alert("⚠️ 找不到對應的讓桿資料！請確認表格中是否有這些球員的對戰紀錄。"); 
+                    else alert(`✅ 成功從資料庫帶入 ${fillCount} 筆讓桿資料！`);
+                } 
+            } catch (e) {
+                console.error("BatchAutoFill Error:", e);
+                alert("查詢時發生錯誤：" + e.message);
+            } finally {
                 btn.disabled = false; 
                 btn.innerHTML = orig; 
-                return;
             }
-
-            const res = await apiCall("fetchExternalHandicaps", { matchups: matchups }, false, "抓取資料..."); 
-            
-            if (res && res.handicaps) { 
-                var fillCount = 0; 
-                labelElements.forEach((lbl, i) => { 
-                    let pin = lbl.dataset.pin; 
-                    let idx = lbl.dataset.idx; 
-                    if (res.handicaps[i] !== "" && res.handicaps[i] !== null) { 
-                        document.getElementById(`h_${pin}_${idx}`).value = res.handicaps[i]; 
-                        fillCount++; 
-                    } 
-                }); 
-                if (fillCount === 0) alert("找不到對應的讓桿資料！"); 
-            } 
-            btn.disabled = false; 
-            btn.innerHTML = orig; 
         }
 
         async function applyCourse() { let course = document.getElementById('setupCourseSelect').value; let tee = document.getElementById('setupTeeOff').value; let hdcpMode = document.getElementById('setupHdcpMode').value; if(!course && document.getElementById('setupCourseSelect').disabled === false) return alert("請選擇球場"); const res = await apiCall("applyCourseData", { pin: currentPin, courseName: course, teeOff: tee, hdcpMode: hdcpMode, manualPars:[], manualStdHdcp:[] }, false, "套用球場..."); if (res) { alert(res.message); document.getElementById('holeSelect').value = (tee === "IN") ? "10" : "1"; } }
