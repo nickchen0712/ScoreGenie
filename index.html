@@ -1846,7 +1846,7 @@ function leaveRoom() {
             }
         }
 
-        // 4. 💡 替換：讀取戰報 (改變鷹鳥與近洞獎的渲染格式)
+// 4. 💡 替換：讀取戰報 (補回遺失的各組詳細戰報連結)
         async function loadTeamReport(reportId) {
             navTo('page-team-report'); 
             currentViewedReportId = reportId; 
@@ -1883,7 +1883,7 @@ function leaveRoom() {
                 if (ntpLdHtml) { document.getElementById('trNtpLdContent').innerHTML = ntpLdHtml; document.getElementById('trSpecialAwardsCard').style.display = 'block'; }
             }
 
-            // 💡 渲染全新格式的鷹鳥榜 (支援 Name (Count): 1st、5th)
+            // 💡 渲染全新格式的鷹鳥榜
             const getOrdinal = (n) => { let s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
             const renderBirds = (dataObj, icon, hlClass) => {
                 if(!dataObj || Object.keys(dataObj).length === 0) return null;
@@ -1913,8 +1913,19 @@ function leaveRoom() {
                 html += `<tr><td style="font-weight:bold; color:#81c784; font-size:16px;">${i+1}</td><td style="font-weight:bold; color:#ffd700;">${grossRank}</td><td style="font-weight:bold; text-align:center;">${formatNameForDisplay(p.name)}</td><td>${p.gross}</td><td>${p.handicap}</td><td style="color:#81c784; font-weight:bold;">${p.netScore}</td></tr>`; 
             });
             document.querySelector('#trFinalBoard tbody').innerHTML = html;
-        }
 
+            // 💡 關鍵修復：把各組詳細戰報的連結迴圈補回來！
+            let groupLinksHtml = "";
+            if (res.groupReports && res.groupReports.length > 0) {
+                res.groupReports.forEach((g, idx) => {
+                    groupLinksHtml += `<button onclick="navToGroupReport('${g.reportId}', '${reportId}')" class="btn-gray" style="margin-bottom:10px; border:1px solid #81d4fa; color:#81d4fa; background:#252525;"><i class="fas fa-search"></i> 第 ${idx + 1} 組 (PIN: ${g.pin}) 詳細戰報</button>`;
+                });
+            } else {
+                groupLinksHtml = '<p style="color:#777; font-size:14px; text-align:left;">目前尚無分組戰報資料</p>';
+            }
+            document.getElementById('trGroupLinks').innerHTML = groupLinksHtml;
+        }
+        
         function navToGroupReport(groupId, parentId) {
             parentTeamReportId = parentId;
             window.history.pushState({report: groupId, parent: parentId}, "", "?report=" + groupId + "&parent=" + parentId);
