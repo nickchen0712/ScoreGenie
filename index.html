@@ -612,44 +612,48 @@
 
         let bgSyncTimer = null;
 
-        async function apiCall(action, payload = {}, useFullLoader = false, customText = "處理中...", silent = false) {
-            if (!silent) {
-                document.getElementById('miniLoaderText').innerHTML = customText; 
-                document.getElementById('miniLoader').style.display = 'flex'; 
-            }
-            
-            try {
-                const response = await fetch(gasUrl, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-                    body: JSON.stringify({ action: action, payload: payload }) 
-                });
-                const json = await response.json();
-                
-                if (!silent) document.getElementById('miniLoader').style.display = 'none';
-                
-                if (!json.success) { 
-                    if(!silent) alert("伺服器錯誤：" + json.error); 
-                    return null; 
-                }
-                return json.data;
-            } catch (error) {
-           console.error("API Error:", error);
-           if (document.getElementById('loadingOverlay')) document.getElementById('loadingOverlay').style.display = 'none';
-           // 💡 新增：針對產生戰報與逾時的優雅提示
-           if (error.name === 'AbortError' || error.message.includes('逾時') || error.message.includes('Failed to fetch')) {
-               if (action === 'generateTeamReport' || action === 'createPermanentReport') {
-                   alert("⏳ 伺服器正在背景努力結算成績中！\n\n這可能需要一點時間，請勿重複點擊。");
-                   return true; // 假裝成功，不讓畫面崩潰
-               }
-               alert("⚠️ 網路連線逾時，請確認您的網路狀態後再試一次。");
-           } else {
-               alert("❌ 系統連線發生錯誤：\n" + error.message);
+async function apiCall(action, payload = {}, useFullLoader = false, customText = "處理中...", silent = false) {
+           if (!silent) {
+               document.getElementById('miniLoaderText').innerHTML = customText;
+               document.getElementById('miniLoader').style.display = 'flex';
            }
-           return null;
+           // 💡 新增：設定 45 秒連線耐心 (AbortController)
+           const controller = new AbortController();
+           const timeoutId = setTimeout(() => controller.abort(), 45000);
+           try {
+               const response = await fetch(gasUrl, {
+                   method: 'POST',
+                   headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                   body: JSON.stringify({ action: action, payload: payload }),
+                   signal: controller.signal // 💡 關鍵：綁定定時器，讓它有 45 秒的耐心
+               });
+               clearTimeout(timeoutId); // 成功收到回音就取消定時器
+               const json = await response.json();
+               if (!silent) document.getElementById('miniLoader').style.display = 'none';
+               if (!json.success) {
+                   if(!silent) alert("伺服器錯誤：" + json.error);
+                   return null;
+               }
+               return json.data;
+           } catch (error) {
+               console.error("API Error:", error);
+               clearTimeout(timeoutId); // 確保發生錯誤時定時器也被清掉
+               // 💡 修正：確保遇到錯誤時，所有的轉圈圈都能被正確關閉
+               if (document.getElementById('loadingOverlay')) document.getElementById('loadingOverlay').style.display = 'none';
+               if (document.getElementById('miniLoader')) document.getElementById('miniLoader').style.display = 'none';
+               // 針對產生戰報與逾時的優雅提示
+               if (error.name === 'AbortError' || error.message.includes('逾時') || error.message.includes('Failed to fetch')) {
+                   if (action === 'generateTeamReport' || action === 'createPermanentReport') {
+                       alert("⏳ 伺服器正在背景努力結算成績中！\n\n這可能需要一點時間，請勿重複點擊。您可以稍後至「營運中心」查看戰報是否已成功產生。");
+                       return true; // 假裝成功，不讓畫面崩潰
+                   }
+                   alert("⚠️ 網路連線逾時，請確認您的網路狀態後再試一次。");
+               } else {
+                   alert("❌ 系統連線發生錯誤：\n" + error.message);
+               }
+               return null;
+           }
        }
-            }
-        }
 
         function navTo(pageId) { 
             document.querySelectorAll('.page-container').forEach(p => p.classList.remove('active-page')); 
