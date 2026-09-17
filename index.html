@@ -633,12 +633,21 @@
                     return null; 
                 }
                 return json.data;
-            } catch (err) { 
-                if (!silent) {
-                    document.getElementById('miniLoader').style.display = 'none'; 
-                    alert("連線失敗，請檢查網路狀態！"); 
-                }
-                return null; 
+            } catch (error) {
+           console.error("API Error:", error);
+           if (document.getElementById('loadingOverlay')) document.getElementById('loadingOverlay').style.display = 'none';
+           // 💡 新增：針對產生戰報與逾時的優雅提示
+           if (error.name === 'AbortError' || error.message.includes('逾時') || error.message.includes('Failed to fetch')) {
+               if (action === 'generateTeamReport' || action === 'createPermanentReport') {
+                   alert("⏳ 伺服器正在背景努力結算成績中！\n\n這可能需要一點時間，請勿重複點擊。");
+                   return true; // 假裝成功，不讓畫面崩潰
+               }
+               alert("⚠️ 網路連線逾時，請確認您的網路狀態後再試一次。");
+           } else {
+               alert("❌ 系統連線發生錯誤：\n" + error.message);
+           }
+           return null;
+       }
             }
         }
 
